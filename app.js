@@ -1,16 +1,50 @@
 // app.js
 
-// Referências ao DOM
+// — Referências ao DOM —
 const btnSearch        = document.getElementById("btn-search");
 const barcodeInput     = document.getElementById("barcode");
 const resultContainer  = document.getElementById("result");
 const summaryContainer = document.getElementById("summary");
 const loading          = document.getElementById("loading");
-
 const radiusButtons    = document.querySelectorAll('.radius-btn');
-let selectedRadius     = document.querySelector('.radius-btn.active').dataset.value;
 
-// 1) Seleção de raio
+// Histórico
+const historyListEl    = document.getElementById("history-list");
+const clearHistoryBtn  = document.getElementById("clear-history");
+let   historyArr       = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+
+// Raio inicialmente ativo
+let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
+
+// — Funções de Histórico —
+function renderHistory() {
+  historyListEl.innerHTML = "";
+  historyArr.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.innerHTML = item.image
+      ? `<img src="${item.image}" alt="${item.name}" class="history-thumb" />`
+      : `<span class="history-name">${item.name}</span>`;
+    historyListEl.appendChild(li);
+  });
+}
+
+function saveHistory() {
+  localStorage.setItem("searchHistory", JSON.stringify(historyArr));
+}
+
+clearHistoryBtn.addEventListener("click", () => {
+  if (confirm("Deseja limpar o histórico de buscas?")) {
+    historyArr = [];
+    saveHistory();
+    renderHistory();
+  }
+});
+
+// renderiza ao carregar
+renderHistory();
+
+// — Tratamento dos botões de raio —
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     radiusButtons.forEach(b => b.classList.remove('active'));
@@ -19,7 +53,7 @@ radiusButtons.forEach(btn => {
   });
 });
 
-// 2) Função de busca
+// — Função de busca principal —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
   if (!barcode) {
@@ -27,12 +61,12 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // exibe loading e limpa tela
+  // mostra loading e limpa anteriores
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // 2.1) Monta localização
+  // 1) Localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -53,7 +87,7 @@ btnSearch.addEventListener("click", async () => {
 
   const order = document.getElementById("ordenar").value;
 
-  // 2.2) Chama a Netlify Function via POST
+  // 2) Chama Netlify Function
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -77,7 +111,7 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // 2.3) Normaliza o array de resultados
+  // 3) Normaliza resultados
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
@@ -88,22 +122,33 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // 2.4) Cabeçalho do produto usando codGetin do primeiro item
-  const primeiro     = dados[0];
-  const productName  = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
-  const productImg   = primeiro.codGetin
+  // 4) Cabeçalho do produto (image+nome)
+  const primeiro    = dados[0];
+  const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
+  const productImg  = primeiro.codGetin
     ? `https://cdn-cosmos.bluesoft.com.br/products/${primeiro.codGetin}`
-    : 'https://via.placeholder.com/150';
+    : '';
 
   summaryContainer.innerHTML = `
     <div class="product-header">
-      <img src="${productImg}" alt="${productName}" />
-      <p>${productName}</p>
-      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
+      ${productImg
+        ? `<img src="${productImg}" alt="${productName}" />`
+        : `<p class="product-header-name">${productName}</p>`
+      }
     </div>
   `;
 
-  // 2.5) Renderiza cards de menor e maior preço
+  // 5) Adiciona ao histórico
+  historyArr.unshift({
+    name:  productName,
+    image: productImg
+  });
+  // limite de 20 entradas
+  if (historyArr.length > 20) historyArr.pop();
+  saveHistory();
+  renderHistory();
+
+  // 6) Renderiza os cards de menor e maior preço
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
 
