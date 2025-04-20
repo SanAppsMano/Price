@@ -66,11 +66,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     resultDiv.innerHTML = arr.map(e => {
       const isFav = favorites.includes(e.codEstabelecimento);
+      const thumbnail = e.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${e.codGetin}` : 'https://via.placeholder.com/100';
       return `
         <div class="card">
           <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
             ${isFav ? '❤️' : '🤍'}
           </button>
+          <img src="${thumbnail}" alt="Produto" style="max-width: 100px; margin-bottom: 0.5em;"/>
           <h2>${e.nomFantasia || e.nomRazaoSocial || '—'}</h2>
           <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
           <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
