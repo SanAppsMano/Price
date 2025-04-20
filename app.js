@@ -11,16 +11,21 @@ const radiusButtons    = document.querySelectorAll('.radius-btn');
 // — Histórico —
 const historyListEl   = document.getElementById("history-list");
 const clearHistoryBtn = document.getElementById("clear-history");
-// carregamos do localStorage; chave mantida de antes
 let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 
-// helper para persistir histórico
+// Persistir histórico
 function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Função que redesenha resumo + cards a partir de um item de histórico
+// Redesenha resumo + cards a partir do cache
 function loadFromCache(item) {
+  // → Verifica se tem dados em cache
+  if (!item.dados || !Array.isArray(item.dados)) {
+    alert("Sem dados em cache para este produto. Faça a busca primeiro.");
+    return;
+  }
+
   const { name: productName, image: productImg, dados } = item;
 
   // Cabeçalho do produto
@@ -60,7 +65,7 @@ function loadFromCache(item) {
   });
 }
 
-// Função que desenha a lista horizontal de histórico
+// Desenha a lista horizontal de histórico
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -87,7 +92,7 @@ function renderHistory() {
   });
 }
 
-// Limpa histórico
+// Limpar histórico
 clearHistoryBtn.addEventListener("click", () => {
   if (confirm("Deseja limpar o histórico de buscas?")) {
     historyArr = [];
@@ -96,7 +101,7 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// renderiza ao iniciar
+// Renderiza histórico ao carregar
 renderHistory();
 
 // — Seleção de raio —
@@ -117,7 +122,6 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // mostra loading e limpa anteriores
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
@@ -143,7 +147,7 @@ btnSearch.addEventListener("click", async () => {
 
   const order = document.getElementById("ordenar").value;
 
-  // chamada POST
+  // fetch POST
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -167,7 +171,7 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // normaliza array
+  // normaliza resultados
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
@@ -195,7 +199,7 @@ btnSearch.addEventListener("click", async () => {
     </div>
   `;
 
-  // adiciona ao histórico
+  // adiciona ao histórico (agora sempre inclui `dados`)
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   if (historyArr.length > 20) historyArr.pop();
   saveHistory();
