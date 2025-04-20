@@ -12,6 +12,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const modal        = document.getElementById('modal');
   const modalClose   = document.getElementById('close-modal');
   const modalList    = document.getElementById('modal-list');
+  const modalHeader  = document.getElementById('modal-header');
+  const modalSelect  = document.getElementById('modal-sort');
   const FN_URL       = `${window.location.origin}/.netlify/functions/search`;
 
   let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
@@ -42,6 +44,10 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('click', e => {
     if (e.target === modal) modal.style.display = 'none';
   });
+
+  if (modalSelect) {
+    modalSelect.addEventListener('change', () => renderModal(lastData));
+  }
 
   function renderAll(data) {
     const arr = [...data];
@@ -80,7 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <p style="font-size: 1.1em;"><strong>${produtoNome}</strong></p>
         <img src="${produtoImg}" alt="Imagem do produto" style="max-width: 150px; display: block; margin: 0.5em auto;"/>
       </div>
-      <div class="card-container">
+      <div class="card-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1em;">
         ${renderCard(menor, 'Menor preço')}
         ${renderCard(maior, 'Maior preço')}
       </div>
@@ -90,7 +96,11 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderModal(data) {
-    const sorted = [...data].sort((a,b)=>a.valMinimoVendido - b.valMinimoVendido);
+    const sortOption = modalSelect ? modalSelect.value : 'preco-asc';
+    let sorted = [...data];
+    if (sortOption === 'preco-desc') sorted.sort((a,b) => b.valMinimoVendido - a.valMinimoVendido);
+    else sorted.sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
+
     modalList.innerHTML = sorted.map((e, i) => {
       const preco = e.valMinimoVendido.toFixed(2);
       const nome  = e.nomFantasia || e.nomRazaoSocial || '—';
