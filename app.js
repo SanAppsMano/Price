@@ -64,15 +64,17 @@ window.addEventListener('DOMContentLoaded', () => {
     else if (type === 'preco-desc') arr.sort((a,b)=>b.valMaximoVendido - a.valMaximoVendido);
     else if (type === 'favorito') arr.sort((a,b)=> (favorites.includes(b.codEstabelecimento)?1:0) - (favorites.includes(a.codEstabelecimento)?1:0));
 
-    resultDiv.innerHTML = arr.map(e=>{
+    resultDiv.innerHTML = arr.map(e => {
       const isFav = favorites.includes(e.codEstabelecimento);
       return `
         <div class="card">
-          <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">\${isFav?'❤️':'🤍'}</button>
-          <h2>\${e.nomFantasia||e.nomRazaoSocial||'—'}</h2>
-          <p><strong>Preço:</strong> R$ \${e.valMinimoVendido.toFixed(2)}</p>
-          <p><strong>Bairro/Município:</strong> \${e.nomBairro||'—'} / \${e.nomMunicipio||'—'}</p>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=\${e.numLatitude},\${e.numLongitude}" target="_blank" title="Como chegar">
+          <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
+            ${isFav ? '❤️' : '🤍'}
+          </button>
+          <h2>${e.nomFantasia || e.nomRazaoSocial || '—'}</h2>
+          <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+          <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}" target="_blank" title="Como chegar">
             <i class="fas fa-map-marker-alt"></i> Como chegar
           </a>
         </div>
@@ -87,8 +89,8 @@ window.addEventListener('DOMContentLoaded', () => {
       const nome  = e.nomFantasia || e.nomRazaoSocial || '—';
       return `
         <li>
-          <strong>\${i+1}.</strong> R$ \${preco} - \${nome}
-          <a href="https://www.google.com/maps/dir/?api=1&destination=\${e.numLatitude},\${e.numLongitude}" target="_blank" title="Como chegar">
+          <strong>${i+1}.</strong> R$ ${preco} - ${nome}
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}" target="_blank" title="Como chegar">
             <i class="fas fa-location-arrow"></i>
           </a>
         </li>
@@ -109,8 +111,7 @@ window.addEventListener('DOMContentLoaded', () => {
       lastData = data;
       renderAll(data);
     } catch(err) {
-      resultDiv.innerHTML = `<p class="error">Erro na busca: \${err.message}</p>`;
+      resultDiv.innerHTML = `<p class="error">Erro na busca: ${err.message}</p>`;
     }
   });
-
 });
