@@ -32,20 +32,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  ordenarSel.addEventListener('change', () => {
-    renderAll(lastData);
-  });
-  document.body.addEventListener('click', e => {
-    if (e.target.matches('.fav-btn')) {
-      const code = e.target.dataset.code;
-      const idx = favorites.indexOf(code);
-      if (idx >= 0) favorites.splice(idx,1);
-      else favorites.push(code);
-      saveFavorites();
-      renderAll(lastData);
-    }
-  });
-
   modalBtn.addEventListener('click', () => {
     renderModal(lastData);
     modal.style.display = 'block';
@@ -58,20 +44,23 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   function renderAll(data) {
-    const type = ordenarSel.value;
-    let arr = [...data];
-    if (type === 'preco-asc') arr.sort((a,b)=>a.valMinimoVendido - b.valMinimoVendido);
-    else if (type === 'preco-desc') arr.sort((a,b)=>b.valMaximoVendido - a.valMaximoVendido);
-    else if (type === 'favorito') arr.sort((a,b)=> (favorites.includes(b.codEstabelecimento)?1:0) - (favorites.includes(a.codEstabelecimento)?1:0));
+    const arr = [...data];
+    if (arr.length === 0) {
+      resultDiv.innerHTML = '<p>Nenhum estabelecimento encontrado.</p>';
+      return;
+    }
 
+    arr.sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
+    const menor = arr[0];
+    const maior = arr[arr.length - 1];
     const total = arr.length;
-    let header = `<p><strong>Total de estabelecimentos encontrados:</strong> ${total}</p>`;
 
-    resultDiv.innerHTML = header + arr.map(e => {
+    const renderCard = (e, label) => {
       const isFav = favorites.includes(e.codEstabelecimento);
       const thumbnail = e.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${e.codGetin}` : 'https://via.placeholder.com/100';
       return `
         <div class="card">
+          <div class="tag-label">${label}</div>
           <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
             ${isFav ? '❤️' : '🤍'}
           </button>
@@ -85,7 +74,10 @@ window.addEventListener('DOMContentLoaded', () => {
           </a>
         </div>
       `;
-    }).join('');
+    };
+
+    const cardsHtml = renderCard(menor, 'Menor preço') + renderCard(maior, 'Maior preço');
+    resultDiv.innerHTML = `<p><strong>Total de estabelecimentos encontrados:</strong> ${total}</p>` + cardsHtml;
   }
 
   function renderModal(data) {
