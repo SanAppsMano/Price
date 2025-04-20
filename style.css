@@ -54,11 +54,12 @@ h1 {
   margin-bottom: 1rem;
 }
 
-.card, .image-card {
+.card,
+.image-card {
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 1rem;
   flex: 1 1 300px;
 }
@@ -102,6 +103,7 @@ h1 {
 }
 
 /* modal, histórico etc. mantêm o seu estilo atual */
+
 /* ===== Product header ===== */
 .product-header {
   text-align: center;
