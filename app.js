@@ -54,18 +54,17 @@ window.addEventListener('DOMContentLoaded', () => {
     const menor = arr[0];
     const maior = arr[arr.length - 1];
     const total = arr.length;
+    const produtoNome = menor.dscProduto || maior.dscProduto || 'Produto não identificado';
+    const produtoImg = menor.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${menor.codGetin}` : 'https://via.placeholder.com/150';
 
     const renderCard = (e, label) => {
       const isFav = favorites.includes(e.codEstabelecimento);
-      const thumbnail = e.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${e.codGetin}` : 'https://via.placeholder.com/100';
       return `
         <div class="card">
           <div class="tag-label">${label}</div>
           <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
             ${isFav ? '❤️' : '🤍'}
           </button>
-          <p><strong>${e.dscProduto || 'Produto sem nome'}</strong></p>
-          <img src="${thumbnail}" alt="Produto" style="max-width: 100px; margin-bottom: 0.5em;"/>
           <h2>${e.nomFantasia || e.nomRazaoSocial || '—'}</h2>
           <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
           <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
@@ -76,7 +75,17 @@ window.addEventListener('DOMContentLoaded', () => {
       `;
     };
 
-    const cardsHtml = renderCard(menor, 'Menor preço') + renderCard(maior, 'Maior preço');
+    const cardsHtml = `
+      <div class="product-header">
+        <p><strong>Produto:</strong> ${produtoNome}</p>
+        <img src="${produtoImg}" alt="Imagem do produto" style="max-width: 120px; margin: 0.5em 0;"/>
+      </div>
+      <div class="card-container">
+        ${renderCard(menor, 'Menor preço')}
+        ${renderCard(maior, 'Maior preço')}
+      </div>
+    `;
+
     resultDiv.innerHTML = `<p><strong>Total de estabelecimentos encontrados:</strong> ${total}</p>` + cardsHtml;
   }
 
@@ -85,9 +94,11 @@ window.addEventListener('DOMContentLoaded', () => {
     modalList.innerHTML = sorted.map((e, i) => {
       const preco = e.valMinimoVendido.toFixed(2);
       const nome  = e.nomFantasia || e.nomRazaoSocial || '—';
+      const bairro = e.nomBairro || '—';
+      const municipio = e.nomMunicipio || '—';
       return `
         <li>
-          <strong>${i+1}.</strong> R$ ${preco} - ${nome}
+          <strong>${i+1}.</strong> R$ ${preco} - ${nome} (${bairro} / ${municipio})
           <a href="https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}" target="_blank" title="Como chegar">
             <i class="fas fa-location-arrow"></i>
           </a>
