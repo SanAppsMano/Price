@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Busca de Preço</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
   <h1>Busca de Preço</h1>
@@ -34,6 +35,13 @@
 
   <button type="button" id="btn-search">Pesquisar Preço</button>
 
+  <label for="ordenar">Ordenar por:</label>
+  <select id="ordenar">
+    <option value="preco-asc">Menor preço</option>
+    <option value="preco-desc">Maior preço</option>
+    <option value="favorito">Favoritos primeiro</option>
+  </select>
+
   <!-- Loading overlay -->
   <div id="loading" class="loading-overlay">
     <div class="spinner"></div>
@@ -41,6 +49,19 @@
   </div>
 
   <div id="result"></div>
+
+  <button id="open-modal" class="open-modal-btn" title="Ver todos em lista">
+    <i class="fas fa-list"></i> Ver Lista Ordenada
+  </button>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-modal">&times;</span>
+      <h2>Lista de Preços</h2>
+      <ol id="modal-list"></ol>
+    </div>
+  </div>
 
   <h2>Histórico de buscas</h2>
   <div id="history">
