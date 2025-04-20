@@ -1,6 +1,6 @@
 // app.js
 
-// Referências aos elementos do DOM
+// Referências ao DOM
 const btnSearch        = document.getElementById("btn-search");
 const barcodeInput     = document.getElementById("barcode");
 const resultContainer  = document.getElementById("result");
@@ -10,7 +10,7 @@ const loading          = document.getElementById("loading");
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 let selectedRadius     = document.querySelector('.radius-btn.active').dataset.value;
 
-// 1) Tratamento dos botões de raio
+// 1) Seleção de raio
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     radiusButtons.forEach(b => b.classList.remove('active'));
@@ -27,12 +27,12 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // Exibe loading e limpa resultados anteriores
+  // exibe loading e limpa tela
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // 2.1) Monta parâmetros de localização
+  // 2.1) Monta localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -88,14 +88,18 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // 2.4) Monta cabeçalho do produto: imagem + nome
-  const productName   = data.nomeProduto || 'Produto não identificado';
-  const productImgUrl = data.imagemProdutoUrl || 'https://via.placeholder.com/150';
+  // 2.4) Cabeçalho do produto usando codGetin do primeiro item
+  const primeiro     = dados[0];
+  const productName  = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
+  const productImg   = primeiro.codGetin
+    ? `https://cdn-cosmos.bluesoft.com.br/products/${primeiro.codGetin}`
+    : 'https://via.placeholder.com/150';
 
   summaryContainer.innerHTML = `
     <div class="product-header">
-      <img src="${productImgUrl}" alt="Imagem do produto">
+      <img src="${productImg}" alt="${productName}" />
       <p>${productName}</p>
+      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
     </div>
   `;
 
@@ -105,7 +109,7 @@ btnSearch.addEventListener("click", async () => {
 
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const card = document.createElement("div");
+    const card     = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-header">
@@ -113,9 +117,9 @@ btnSearch.addEventListener("click", async () => {
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> 
+        <p><strong>Bairro/Município:</strong>
            ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}" 
+        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
            target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
