@@ -18,13 +18,16 @@ function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Redesenha resumo + cards a partir do cache
+// Carrega um item do histórico (cache) na tela
 function loadFromCache(item) {
-  // → Verifica se tem dados em cache
+  // Verifica se há dados em cache
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
     return;
   }
+
+  // Preenche o campo de código de barras
+  barcodeInput.value = item.code;
 
   const { name: productName, image: productImg, dados } = item;
 
@@ -65,7 +68,7 @@ function loadFromCache(item) {
   });
 }
 
-// Desenha a lista horizontal de histórico
+// Renderiza a lista horizontal de histórico
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -74,9 +77,7 @@ function renderHistory() {
 
     const btn = document.createElement("button");
     btn.title = item.name;
-    btn.addEventListener("click", () => {
-      loadFromCache(item);
-    });
+    btn.addEventListener("click", () => loadFromCache(item));
 
     if (item.image) {
       const img = document.createElement("img");
@@ -101,7 +102,7 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// Renderiza histórico ao carregar
+// Renderiza histórico ao iniciar
 renderHistory();
 
 // — Seleção de raio —
@@ -122,11 +123,15 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
+  // Troca o texto do botão e aplica a fonte nova
+  btnSearch.textContent = "Atualizar Preço";
+  btnSearch.classList.add("btn-update-font");
+
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // localização
+  // Localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -147,7 +152,7 @@ btnSearch.addEventListener("click", async () => {
 
   const order = document.getElementById("ordenar").value;
 
-  // fetch POST
+  // Chamada POST
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -171,7 +176,11 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // normaliza resultados
+  // Restaura o texto e fonte do botão
+  btnSearch.textContent = "Pesquisar Preço";
+  btnSearch.classList.remove("btn-update-font");
+
+  // Normaliza resultados
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
@@ -182,7 +191,7 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // cabeçalho do produto
+  // Cabeçalho do produto
   const primeiro    = dados[0];
   const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
   const productImg  = primeiro.codGetin
@@ -199,13 +208,13 @@ btnSearch.addEventListener("click", async () => {
     </div>
   `;
 
-  // adiciona ao histórico (agora sempre inclui `dados`)
+  // Adiciona ao histórico (com `dados`)
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   if (historyArr.length > 20) historyArr.pop();
   saveHistory();
   renderHistory();
 
-  // renderiza cards
+  // Renderiza cards
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e,i) => {
