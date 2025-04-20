@@ -8,31 +8,86 @@ const summaryContainer = document.getElementById("summary");
 const loading          = document.getElementById("loading");
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 
-// Histórico
-const historyListEl    = document.getElementById("history-list");
-const clearHistoryBtn  = document.getElementById("clear-history");
-let   historyArr       = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+// — Histórico —
+const historyListEl   = document.getElementById("history-list");
+const clearHistoryBtn = document.getElementById("clear-history");
+// carregamos do localStorage; chave mantida de antes
+let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 
-// Raio inicialmente ativo
-let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
+// helper para persistir histórico
+function saveHistory() {
+  localStorage.setItem("searchHistory", JSON.stringify(historyArr));
+}
 
-// — Funções de Histórico —
+// Função que redesenha resumo + cards a partir de um item de histórico
+function loadFromCache(item) {
+  const { name: productName, image: productImg, dados } = item;
+
+  // Cabeçalho do produto
+  summaryContainer.innerHTML = `
+    <div class="product-header">
+      ${productImg
+        ? `<img src="${productImg}" alt="${productName}" />`
+        : `<p>${productName}</p>`
+      }
+      <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
+    </div>
+  `;
+
+  // Cards
+  resultContainer.innerHTML = "";
+  const sorted = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
+  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
+  [menor, maior].forEach((e,i) => {
+    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
+    const card     = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-header">
+        ${priceLab} — ${e.nomFantasia||e.nomRazaoSocial||'—'}
+      </div>
+      <div class="card-body">
+        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+        <p><strong>Bairro/Município:</strong>
+           ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
+        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
+           target="_blank">
+          <i class="fas fa-map-marker-alt"></i> Como chegar
+        </a>
+      </div>
+    `;
+    resultContainer.appendChild(card);
+  });
+}
+
+// Função que desenha a lista horizontal de histórico
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
     const li = document.createElement("li");
     li.className = "history-item";
-    li.innerHTML = item.image
-      ? `<img src="${item.image}" alt="${item.name}" class="history-thumb" />`
-      : `<span class="history-name">${item.name}</span>`;
+
+    const btn = document.createElement("button");
+    btn.title = item.name;
+    btn.addEventListener("click", () => {
+      loadFromCache(item);
+    });
+
+    if (item.image) {
+      const img = document.createElement("img");
+      img.src = item.image;
+      img.alt = item.name;
+      btn.appendChild(img);
+    } else {
+      btn.textContent = item.name;
+    }
+
+    li.appendChild(btn);
     historyListEl.appendChild(li);
   });
 }
 
-function saveHistory() {
-  localStorage.setItem("searchHistory", JSON.stringify(historyArr));
-}
-
+// Limpa histórico
 clearHistoryBtn.addEventListener("click", () => {
   if (confirm("Deseja limpar o histórico de buscas?")) {
     historyArr = [];
@@ -41,10 +96,11 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// renderiza ao carregar
+// renderiza ao iniciar
 renderHistory();
 
-// — Tratamento dos botões de raio —
+// — Seleção de raio —
+let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     radiusButtons.forEach(b => b.classList.remove('active'));
@@ -53,7 +109,7 @@ radiusButtons.forEach(btn => {
   });
 });
 
-// — Função de busca principal —
+// — Função principal de busca —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
   if (!barcode) {
@@ -66,7 +122,7 @@ btnSearch.addEventListener("click", async () => {
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // 1) Localização
+  // localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -87,7 +143,7 @@ btnSearch.addEventListener("click", async () => {
 
   const order = document.getElementById("ordenar").value;
 
-  // 2) Chama Netlify Function
+  // chamada POST
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -111,7 +167,7 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // 3) Normaliza resultados
+  // normaliza array
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
@@ -122,7 +178,7 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // 4) Cabeçalho do produto (image+nome)
+  // cabeçalho do produto
   const primeiro    = dados[0];
   const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
   const productImg  = primeiro.codGetin
@@ -133,37 +189,33 @@ btnSearch.addEventListener("click", async () => {
     <div class="product-header">
       ${productImg
         ? `<img src="${productImg}" alt="${productName}" />`
-        : `<p class="product-header-name">${productName}</p>`
+        : `<p>${productName}</p>`
       }
+      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
     </div>
   `;
 
-  // 5) Adiciona ao histórico
-  historyArr.unshift({
-    name:  productName,
-    image: productImg
-  });
-  // limite de 20 entradas
+  // adiciona ao histórico
+  historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   if (historyArr.length > 20) historyArr.pop();
   saveHistory();
   renderHistory();
 
-  // 6) Renderiza os cards de menor e maior preço
+  // renderiza cards
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-
-  [menor, maior].forEach((e, i) => {
+  [menor, maior].forEach((e,i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const card     = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
+        ${priceLab} — ${e.nomFantasia||e.nomRazaoSocial||'—'}
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+           ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
         <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
            target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
