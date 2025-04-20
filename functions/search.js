@@ -1,76 +1,27 @@
-exports.handler = async (event) => {
-  console.log("Received event:", JSON.stringify(event));
+const fetch = require('node-fetch');
 
-  if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    };
-  }
+exports.handler = async (event) => {
+  const q = event.queryStringParameters;
+  const { barcode, locType, city, lat, lon, radius, sort } = q;
+
+  // Monta URL da sua API de preços externos
+  let apiUrl = `https://api.exemplo.com/prices?barcode=${encodeURIComponent(barcode)}&radius=${radius}`;
+  if (locType === 'city') apiUrl += `&city=${encodeURIComponent(city)}`;
+  else if (locType === 'gps') apiUrl += `&lat=${lat}&lon=${lon}`;
+  apiUrl += `&sort=${sort}`;
 
   try {
-    const {
-      codigoDeBarras,
-      latitude,
-      longitude,
-      dias = 3,
-      raio = 15
-    } = JSON.parse(event.body);
-
-    if (
-      typeof codigoDeBarras !== "string" ||
-      typeof latitude !== "number" ||
-      typeof longitude !== "number"
-    ) {
-      return {
-        statusCode: 400,
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify({ error: "Parâmetros inválidos" }),
-      };
-    }
-
-    const apiUrl = "http://api.sefaz.al.gov.br/sfz_nfce_api/api/public/consultarPrecosPorCodigoDeBarras";
-
-    const resp = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "AppToken": process.env.APP_TOKEN,
-      },
-      body: JSON.stringify({
-        codigoDeBarras,
-        dias,
-        latitude,
-        longitude,
-        raio,
-      }),
-    });
-
-    const data = await resp.json();
-    const statusCode = resp.ok ? 200 : resp.status;
-
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`Status ${response.status}`);
+    const data = await response.json();
     return {
-      statusCode,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(data),
+      statusCode: 200,
+      body: JSON.stringify(data)
     };
-
   } catch (err) {
-    console.error("Error in handler:", err);
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: err.message })
     };
   }
 };
