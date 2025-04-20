@@ -3,47 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Busca de Preço</title>
+  <title>Busca de Preço NFC-e</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main>
-    <h1>Busca de Preço</h1>
+    <h1>Consulta de Preços por Código de Barras</h1>
 
     <section class="filters">
-      <fieldset>
-        <legend>Localização</legend>
-        <label><input type="radio" name="loc" value="city" checked> Município</label>
-        <label><input type="radio" name="loc" value="gps"> GPS</label>
-      </fieldset>
-
-      <div id="city-block">
-        <label for="city">Município</label>
-        <select id="city">
-          <option value="Maceió">Maceió</option>
-          <option value="São Paulo">São Paulo</option>
-          <!-- etc -->
-        </select>
-      </div>
-
-      <fieldset class="radius-control">
-        <legend>Raio de busca</legend>
-        <button class="radius-btn" data-value="5">5 km</button>
-        <button class="radius-btn active" data-value="15">15 km</button>
-        <button class="radius-btn" data-value="30">30 km</button>
-      </fieldset>
-
       <div class="search-bar">
-        <input id="barcode" type="search" placeholder="Código de barras…" />
+        <input id="barcode" type="search" placeholder="Digite o código de barras…" />
         <button id="btn-search">Pesquisar</button>
       </div>
-
-      <label for="ordenar">Ordenar por</label>
-      <select id="ordenar">
-        <option value="preco-asc">Menor preço</option>
-        <option value="preco-desc">Maior preço</option>
-        <option value="favorito">Favoritos</option>
-      </select>
     </section>
 
     <div id="result"></div>
@@ -55,11 +26,11 @@
     <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-content">
         <button class="close" id="close-modal" aria-label="Fechar">&times;</button>
-        <div id="modal-header" class="modal-header">
+        <div class="modal-header">
           <h2 id="modal-title">Lista de Preços</h2>
           <select id="modal-sort">
-            <option value="preco-asc">Menor preço</option>
-            <option value="preco-desc">Maior preço</option>
+            <option value="asc">Menor preço</option>
+            <option value="desc">Maior preço</option>
           </select>
         </div>
         <ol id="modal-list"></ol>
@@ -67,7 +38,7 @@
     </div>
 
     <section id="history">
-      <h2>Histórico</h2>
+      <h2>Histórico de Consultas</h2>
       <ul id="history-list"></ul>
       <button id="clear-history">Limpar histórico</button>
     </section>
