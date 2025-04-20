@@ -72,6 +72,7 @@ window.addEventListener('DOMContentLoaded', () => {
           <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
             ${isFav ? '❤️' : '🤍'}
           </button>
+          <p><strong>${e.dscProduto || 'Produto sem nome'}</strong></p>
           <img src="${thumbnail}" alt="Produto" style="max-width: 100px; margin-bottom: 0.5em;"/>
           <h2>${e.nomFantasia || e.nomRazaoSocial || '—'}</h2>
           <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
