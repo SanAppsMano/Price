@@ -1,136 +1,122 @@
-window.addEventListener('DOMContentLoaded', () => {
-  const statusEl     = document.getElementById('api-status');
-  const locRadios    = document.querySelectorAll('input[name="loc"]');
-  const cityBlock    = document.getElementById('city-block');
-  const citySel      = document.getElementById('city');
-  const radiusBtns   = document.querySelectorAll('.radius-btn');
-  const btnSearch    = document.getElementById('btn-search');
-  const barcodeIn    = document.getElementById('barcode');
-  const ordenarSel   = document.getElementById('ordenar');
-  const resultDiv    = document.getElementById('result');
-  const modalBtn     = document.getElementById('open-modal');
-  const modal        = document.getElementById('modal');
-  const modalClose   = document.getElementById('close-modal');
-  const modalList    = document.getElementById('modal-list');
-  const modalHeader  = document.getElementById('modal-header');
-  const modalSelect  = document.getElementById('modal-sort');
-  const FN_URL       = `${window.location.origin}/.netlify/functions/search`;
+// DOM
+const btnSearch      = document.getElementById('btn-search');
+const barcodeInput   = document.getElementById('barcode');
+const resultEl       = document.getElementById('result');
+const historyList    = document.getElementById('history-list');
+const clearHistoryBtn= document.getElementById('clear-history');
+const openModalBtn   = document.getElementById('open-modal');
+const closeModalBtn  = document.getElementById('close-modal');
+const modal          = document.getElementById('modal');
+const modalList      = document.getElementById('modal-list');
+const modalSort      = document.getElementById('modal-sort');
+const loadingEl      = document.getElementById('loading');
+const citySelect     = document.getElementById('city');
+const locRadios      = document.querySelectorAll('input[name="loc"]');
+const radiusBtns     = document.querySelectorAll('.radius-btn');
+const ordenarSelect  = document.getElementById('ordenar');
 
-  let favorites = JSON.parse(localStorage.getItem('favorites')||'[]');
-  function saveFavorites() {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
+let historyData = [];
+
+// Função de busca
+async function doSearch() {
+  const barcode = barcodeInput.value.trim();
+  if (!barcode) {
+    alert('Informe um código de barras.');
+    return;
   }
 
-  let lastData = [];
+  // coleta localização
+  const locType = document.querySelector('input[name="loc"]:checked').value;
+  const radius  = document.querySelector('.radius-btn.active').dataset.value;
+  const sort    = ordenarSelect.value;
+  const params  = new URLSearchParams({ barcode, locType, radius, sort });
 
-  locRadios.forEach(r => r.addEventListener('change', () => {
-    cityBlock.style.display = r.value === 'city' ? 'block' : 'none';
-  }));
-
-  radiusBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      radiusBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  modalBtn.addEventListener('click', () => {
-    renderModal(lastData);
-    modal.style.display = 'block';
-  });
-  modalClose.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
-  window.addEventListener('click', e => {
-    if (e.target === modal) modal.style.display = 'none';
-  });
-
-  if (modalSelect) {
-    modalSelect.addEventListener('change', () => renderModal(lastData));
+  if (locType === 'city')        params.set('city', citySelect.value);
+  else if (locType === 'gps') {
+    // exemplo estático: implementar geolocalização real se quiser
+    params.set('lat', '-9.6432331');
+    params.set('lon', '-35.7190686');
   }
 
-  function renderAll(data) {
-    const arr = [...data];
-    if (arr.length === 0) {
-      resultDiv.innerHTML = '<p>Nenhum estabelecimento encontrado.</p>';
-      return;
-    }
+  loadingEl.classList.add('active');
+  try {
+    const resp = await fetch(`/.netlify/functions/search?${params}`);
+    const data = await resp.json();
+    renderResult(data);
+    historyData.unshift({ barcode, date: new Date().toLocaleString() });
+    renderHistory();
+  } catch (err) {
+    alert('Erro ao buscar preços: ' + err.message);
+  } finally {
+    loadingEl.classList.remove('active');
+  }
+}
 
-    arr.sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-    const menor = arr[0];
-    const maior = arr[arr.length - 1];
-    const total = arr.length;
-    const produtoNome = menor.dscProduto || maior.dscProduto || 'Produto não identificado';
-    const produtoImg = menor.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${menor.codGetin}` : 'https://via.placeholder.com/150';
-
-    const renderCard = (e, label) => {
-      const isFav = favorites.includes(e.codEstabelecimento);
-      return `
-        <div class="card">
-          <div class="tag-label">${label}</div>
-          <button class="fav-btn" data-code="${e.codEstabelecimento}" title="Favorito">
-            ${isFav ? '❤️' : '🤍'}
-          </button>
-          <h2>${e.nomFantasia || e.nomRazaoSocial || '—'}</h2>
-          <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-          <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}" target="_blank" title="Como chegar">
-            <i class="fas fa-map-marker-alt"></i> Como chegar
-          </a>
-        </div>
-      `;
-    };
-
-    const cardsHtml = `
-      <div class="product-header" style="text-align: center; margin-bottom: 1em;">
-        <p style="font-size: 1.1em;"><strong>${produtoNome}</strong></p>
-        <img src="${produtoImg}" alt="Imagem do produto" style="max-width: 150px; display: block; margin: 0.5em auto;"/>
-      </div>
-      <div class="card-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1em;">
-        ${renderCard(menor, 'Menor preço')}
-        ${renderCard(maior, 'Maior preço')}
+// Renderiza resultados no grid
+function renderResult(items) {
+  resultEl.innerHTML = '';
+  items.forEach(prod => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <div class="product-header">${prod.storeName}</div>
+      <img class="product-img" src="${prod.imageUrl}" alt="${prod.productName}" />
+      <div>${prod.productName}</div>
+      <div class="product-info">
+        <div class="product-price">R$ ${prod.price.toFixed(2)}</div>
+        <div>${prod.distance} km</div>
       </div>
     `;
-
-    resultDiv.innerHTML = `<p><strong>Total de estabelecimentos encontrados:</strong> ${total}</p>` + cardsHtml;
-  }
-
-  function renderModal(data) {
-    const sortOption = modalSelect ? modalSelect.value : 'preco-asc';
-    let sorted = [...data];
-    if (sortOption === 'preco-desc') sorted.sort((a,b) => b.valMinimoVendido - a.valMinimoVendido);
-    else sorted.sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
-
-    modalList.innerHTML = sorted.map((e, i) => {
-      const preco = e.valMinimoVendido.toFixed(2);
-      const nome  = e.nomFantasia || e.nomRazaoSocial || '—';
-      const bairro = e.nomBairro || '—';
-      const municipio = e.nomMunicipio || '—';
-      return `
-        <li>
-          <strong>${i+1}.</strong> R$ ${preco} - ${nome} (${bairro} / ${municipio})
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}" target="_blank" title="Como chegar">
-            <i class="fas fa-location-arrow"></i>
-          </a>
-        </li>
-      `;
-    }).join('');
-  }
-
-  btnSearch.addEventListener('click', async () => {
-    const code = barcodeIn.value.trim(); if(!code){ alert('Informe o código'); return; }
-    const raio = parseInt(document.querySelector('.radius-btn.active').dataset.value,10);
-    const [lat, lng] = citySel.value.split(',').map(Number);
-    try {
-      const resp = await fetch(FN_URL,{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({codigoDeBarras:code,dias:2,latitude:lat,longitude:lng,raio})
-      });
-      const data = await resp.json();
-      lastData = data;
-      renderAll(data);
-    } catch(err) {
-      resultDiv.innerHTML = `<p class="error">Erro na busca: ${err.message}</p>`;
-    }
+    resultEl.append(card);
   });
-});
+}
+
+// Histórico
+function renderHistory() {
+  historyList.innerHTML = '';
+  historyData.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = `${item.barcode} — ${item.date}`;
+    historyList.append(li);
+  });
+}
+
+// Modal
+function openModal() {
+  modal.classList.add('open');
+  populateModal();
+}
+function closeModal() {
+  modal.classList.remove('open');
+}
+function populateModal() {
+  modalList.innerHTML = '';
+  document.querySelectorAll('.product-card').forEach(card => {
+    const li = document.createElement('li');
+    li.innerHTML = card.innerHTML;
+    modalList.append(li);
+  });
+}
+function sortModal() {
+  const order = modalSort.value;
+  const lis = Array.from(modalList.children);
+  lis.sort((a, b) => {
+    const pa = parseFloat(a.querySelector('.product-price').textContent.replace('R$','').replace(',','.'));
+    const pb = parseFloat(b.querySelector('.product-price').textContent.replace('R$','').replace(',','.'));
+    return order === 'preco-asc' ? pa - pb : pb - pa;
+  });
+  modalList.innerHTML = '';
+  lis.forEach(li => modalList.append(li));
+}
+
+// Eventos
+btnSearch.addEventListener('click', doSearch);
+barcodeInput.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+clearHistoryBtn.addEventListener('click', () => { historyData = []; renderHistory(); });
+openModalBtn.addEventListener('click', openModal);
+closeModalBtn.addEventListener('click', closeModal);
+modalSort.addEventListener('change', sortModal);
+radiusBtns.forEach(b => b.addEventListener('click', () => {
+  radiusBtns.forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+}));
