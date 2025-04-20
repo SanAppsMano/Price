@@ -1,163 +1,139 @@
 body {
   font-family: sans-serif;
-  max-width: 400px;
-  margin: 1.5em auto;
-  padding: 0 1em;
+  margin: 0;
+  padding: 1em;
+  background: #f5f5f5;
+  color: #333;
 }
 
-h1 {
-  font-size: 1.75em;
-  margin-bottom: 1em;
+main {
+  max-width: 600px;
+  margin: auto;
+  background: white;
+  padding: 1em;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-label,
-select,
-input,
-button {
-  display: block;
+input[type="text"], select {
   width: 100%;
-  margin-bottom: .75em;
-  box-sizing: border-box;
+  padding: 0.6em;
+  margin: 0.5em 0;
   font-size: 1em;
 }
 
-.location-choice {
-  display: flex;
-  gap: 1em;
-  margin-bottom: .75em;
-}
-
-.radius-control {
-  display: flex;
-  gap: .5em;
-  margin-bottom: 1em;
-}
-
-.radius-btn {
-  flex: 1;
-  padding: .5em;
-  background: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
-  font-size: .9em;
+button {
+  padding: 0.6em 1em;
+  margin: 0.5em 0.3em 0.5em 0;
+  font-size: 1em;
   cursor: pointer;
-  line-height: 1.2;
+  border: none;
+  border-radius: 5px;
+  background: #007bff;
+  color: white;
 }
 
-.radius-btn.active {
-  background: #0066cc;
+button.radius-btn {
+  background: #ddd;
+  color: #333;
+}
+
+button.radius-btn.active {
+  background: #007bff;
   color: white;
-  border-color: #005bb5;
+}
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1em;
 }
 
 .card {
+  background: #fff;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 1em;
-  margin-bottom: 1em;
-  position: relative;
+  width: 280px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.card .fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 10px;
+.card h2 {
+  font-size: 1.1em;
+  margin: 0.5em 0;
+  text-align: center;
+}
+
+.fav-btn {
   background: none;
   border: none;
-  font-size: 1.3em;
+  font-size: 1.5em;
   cursor: pointer;
+  margin-bottom: 0.5em;
 }
 
-.card a {
-  display: inline-block;
-  margin-top: 0.5em;
-  color: #0066cc;
-  text-decoration: none;
+.tag-label {
+  font-size: 0.8em;
+  background: #eee;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  font-weight: bold;
 }
 
-.card a:hover {
-  text-decoration: underline;
-}
-
-/* Botão para abrir o modal */
-.open-modal-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1em auto;
-  padding: 0.5em 1em;
-  background-color: #0066cc;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 1em;
-  cursor: pointer;
-  gap: 0.5em;
-}
-
-.open-modal-btn i {
-  font-size: 1.1em;
-}
-
-/* Modal overlay */
+/* Modal */
 .modal {
   display: none;
   position: fixed;
-  z-index: 9999;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-/* Modal content */
 .modal-content {
   background-color: #fff;
-  margin: 5% auto;
+  margin: 10% auto;
   padding: 1em;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 500px;
   border-radius: 10px;
-  max-width: 95%;
-  max-height: 85vh;
+  max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Fechar (X) */
-.modal-content .close {
-  color: #999;
+.close {
   float: right;
-  font-size: 1.5em;
+  font-size: 28px;
   font-weight: bold;
   cursor: pointer;
 }
 
-.modal-content .close:hover {
-  color: #000;
-}
-
-/* Lista no modal */
-#modal-list {
-  list-style: none;
-  padding: 0;
-  margin: 1em 0 0;
+.close:hover {
+  color: red;
 }
 
 #modal-list li {
-  padding: 0.75em;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 1em;
   font-size: 0.95em;
+}
+
+#modal-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1em;
 }
 
-#modal-list li a {
-  text-decoration: none;
-  color: #0066cc;
-  font-size: 1.2em;
-}
-
-#modal-list li a:hover {
-  color: #004999;
+#modal-header select {
+  padding: 0.4em;
+  font-size: 1em;
 }
