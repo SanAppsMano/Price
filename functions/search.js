@@ -1,14 +1,8 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event) => {
-  const q = event.queryStringParameters;
-  const { barcode, locType, city, lat, lon, radius, sort } = q;
-
-  // Monta URL da sua API de preços externos
-  let apiUrl = `https://api.exemplo.com/prices?barcode=${encodeURIComponent(barcode)}&radius=${radius}`;
-  if (locType === 'city') apiUrl += `&city=${encodeURIComponent(city)}`;
-  else if (locType === 'gps') apiUrl += `&lat=${lat}&lon=${lon}`;
-  apiUrl += `&sort=${sort}`;
+  const { barcode } = event.queryStringParameters;
+  const apiUrl = `http://api.sefaz.al.gov.br/sfz_nfce_api/api/public/consultarPrecosPorCodigoDeBarras?codigoBarras=${encodeURIComponent(barcode)}`;
 
   try {
     const response = await fetch(apiUrl);
