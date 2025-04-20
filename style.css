@@ -1,104 +1,56 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 1rem;
-  color: #333;
+/* --- Histórico de buscas --- */
+#history {
+  margin-top: 2rem;
 }
-
-h1 {
-  text-align: center;
-  margin-bottom: 1rem;
+#history-list {
+  list-style: none;
+  padding: 0;
+  max-width: 600px;
+  margin: 0 auto;
 }
-
-.controls {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.5rem;
-  align-items: end;
-  margin-bottom: 1rem;
-}
-
-.radius-control {
+.history-item {
   display: flex;
-  gap: 0.5rem;
-}
-
-.radius-btn {
-  flex: 1;
+  align-items: center;
+  margin-bottom: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid #ccc;
-  background: #fff;
-  text-align: center;
-  cursor: pointer;
-}
-
-.radius-btn.active {
-  background: #007bff;
-  color: #fff;
-  border-color: #007bff;
-}
-
-.loading-overlay {
-  display: none;
-  text-align: center;
-  margin: 1rem 0;
-}
-
-.loading-overlay.active {
-  display: block;
-}
-
-.cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.card, .image-card {
-  background: #fff;
   border: 1px solid #ddd;
   border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 1rem;
-  flex: 1 1 300px;
+  background: #fafafa;
+  transition: background .2s;
 }
-
-.image-card {
-  text-align: center;
+.history-item:hover {
+  background: #f0f0f0;
 }
-
-.image-card img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 0.5rem;
+.history-thumb img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 0.25rem;
+  margin-right: 0.75rem;
 }
-
-.image-card h3 {
-  margin-top: 0.5rem;
+.history-info {
+  display: flex;
+  flex-direction: column;
 }
-
-.card-header {
+.history-name {
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  color: #333;
 }
-
-.card-body p {
-  margin: 0.25rem 0;
+.history-date {
+  font-size: 0.8rem;
+  color: #666;
 }
-
-.open-modal-btn {
+#clear-history {
   display: block;
-  margin: 0 auto 1rem;
-  padding: 0.5rem 1rem;
-  background: #28a745;
+  margin: 0.5rem auto;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  background: #dc3545;
   color: #fff;
   border: none;
   border-radius: 0.25rem;
   cursor: pointer;
 }
-
-.open-modal-btn i {
-  margin-right: 0.5rem;
+#clear-history:hover {
+  background: #c82333;
 }
-
-/* modal, histórico etc. mantêm o seu estilo atual */
