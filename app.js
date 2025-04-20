@@ -1,10 +1,12 @@
 // app.js
 
+// Referências aos elementos do DOM
 const btnSearch        = document.getElementById("btn-search");
 const barcodeInput     = document.getElementById("barcode");
 const resultContainer  = document.getElementById("result");
 const summaryContainer = document.getElementById("summary");
 const loading          = document.getElementById("loading");
+
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 let selectedRadius     = document.querySelector('.radius-btn.active').dataset.value;
 
@@ -17,18 +19,20 @@ radiusButtons.forEach(btn => {
   });
 });
 
+// 2) Função de busca
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
   if (!barcode) {
-    return alert("Digite um código de barras válido.");
+    alert("Digite um código de barras válido.");
+    return;
   }
 
-  // exibe loading e limpa resultados antigos
+  // Exibe loading e limpa resultados anteriores
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // monta localização
+  // 2.1) Monta parâmetros de localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -40,16 +44,16 @@ btnSearch.addEventListener("click", async () => {
       longitude = pos.coords.longitude;
     } catch {
       loading.classList.remove("active");
-      return alert("Não foi possível obter sua localização.");
+      alert("Não foi possível obter sua localização.");
+      return;
     }
   } else {
     [latitude, longitude] = document.getElementById("city").value.split(",");
   }
 
-  // e ordenação
   const order = document.getElementById("ordenar").value;
 
-  // 2) fetch POST
+  // 2.2) Chama a Netlify Function via POST
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -65,59 +69,58 @@ btnSearch.addEventListener("click", async () => {
     });
     data = await res.json();
     console.log("Resposta da busca:", data);
-  } catch (err) {
+  } catch {
     loading.classList.remove("active");
-    return alert("Erro ao buscar preços. Tente novamente mais tarde.");
+    alert("Erro ao buscar preços. Tente novamente mais tarde.");
+    return;
   }
 
   loading.classList.remove("active");
 
-  // 3) NORMALIZAÇÃO do array de resultados
-  // se a função devolveu um array raiz, usa ele; senão, tenta data.dados
+  // 2.3) Normaliza o array de resultados
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
-
   if (!dados.length) {
-    return resultContainer.innerHTML = `
-      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
+    resultContainer.innerHTML = `
+      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
     `;
+    return;
   }
 
-  // 4) resumo
+  // 2.4) Monta cabeçalho do produto: imagem + nome
+  const productName   = data.nomeProduto || 'Produto não identificado';
+  const productImgUrl = data.imagemProdutoUrl || 'https://via.placeholder.com/150';
+
   summaryContainer.innerHTML = `
-    <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
-    ${data.imagemProdutoUrl ? `
-      <div class="image-card">
-        <img src="${data.imagemProdutoUrl}" alt="Imagem do produto">
-        <h3>${data.nomeProduto || ''}</h3>
-      </div>
-    ` : ''}
+    <div class="product-header">
+      <img src="${productImgUrl}" alt="Imagem do produto">
+      <p>${productName}</p>
+    </div>
   `;
 
-  // 5) menor e maior preço
-  const sorted = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length-1]];
+  // 2.5) Renderiza cards de menor e maior preço
+  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
+  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
 
   [menor, maior].forEach((e, i) => {
-    const isFav    = !!e.favorito;
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-header">
-        ${priceLab} — ${isFav ? '❤️' : '🤍'} ${e.nomFantasia||e.nomRazaoSocial||'—'}
+        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
-        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}" target="_blank">
+        <p><strong>Bairro/Município:</strong> 
+           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}" 
+           target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
       </div>
     `;
     resultContainer.appendChild(card);
   });
-
-  // 6) aqui você pode preencher o modal e histórico...
 });
