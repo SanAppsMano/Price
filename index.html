@@ -1,53 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Busca de Preço NFC-e</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Busca de Preço</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  <main>
-    <h1>Consulta de Preços por Código de Barras</h1>
+  <h1>Busca de Preço</h1>
 
-    <section class="filters">
-      <div class="search-bar">
-        <input id="barcode" type="search" placeholder="Digite o código de barras…" />
-        <button id="btn-search">Pesquisar</button>
-      </div>
-    </section>
-
-    <div id="result"></div>
-
-    <button id="open-modal" class="open-modal-btn" title="Ver lista completa">
-      Lista completa
-    </button>
-
-    <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-content">
-        <button class="close" id="close-modal" aria-label="Fechar">&times;</button>
-        <div class="modal-header">
-          <h2 id="modal-title">Lista de Preços</h2>
-          <select id="modal-sort">
-            <option value="asc">Menor preço</option>
-            <option value="desc">Maior preço</option>
-          </select>
-        </div>
-        <ol id="modal-list"></ol>
-      </div>
-    </div>
-
-    <section id="history">
-      <h2>Histórico de Consultas</h2>
-      <ul id="history-list"></ul>
-      <button id="clear-history">Limpar histórico</button>
-    </section>
-  </main>
-
-  <div id="loading" class="loading-overlay">
-    <div class="spinner" role="status" aria-label="Carregando…"></div>
+  <div class="location-choice">
+    <label><input type="radio" name="loc" value="city" checked> Escolher município</label>
+    <label><input type="radio" name="loc" value="gps"> Usar minha localização</label>
   </div>
 
-  <script src="app.js"></script>
+  <div id="city-block">
+    <label for="city">Município:</label>
+    <select id="city">
+      <option value="-9.6432331,-35.7190686">Maceió</option>
+      <option value="-9.751419,-36.659076">Arapiraca</option>
+      <option value="-9.407651,-36.300283">Palmeira dos Índios</option>
+    </select>
+  </div>
+
+  <label>Raio de busca:</label>
+  <div class="radius-control">
+    <button type="button" class="radius-btn" data-value="5">Perto<br><small>5 km</small></button>
+    <button type="button" class="radius-btn active" data-value="15">Médio<br><small>15 km</small></button>
+  </div>
+
+  <label for="barcode">Código de barras:</label>
+  <input id="barcode" type="search" inputmode="numeric" pattern="[0-9]*" placeholder="Digite..." />
+
+  <button type="button" id="btn-search">Pesquisar Preço</button>
+
+  <label for="ordenar">Ordenar por:</label>
+  <select id="ordenar">
+    <option value="preco-asc">Menor preço</option>
+    <option value="preco-desc">Maior preço</option>
+    <option value="favorito">Favoritos primeiro</option>
+  </select>
+
+  <!-- Loading overlay -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <span>Buscando...</span>
+  </div>
+
+  <div id="result"></div>
+
+  <button id="open-modal" class="open-modal-btn" title="Ver todos em lista">
+    <i class="fas fa-list"></i> Ver Lista Ordenada
+  </button>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="close-modal">&times;</span>
+      <h2>Lista de Preços</h2>
+      <ol id="modal-list"></ol>
+    </div>
+  </div>
+
+  <h2>Histórico de buscas</h2>
+  <div id="history">
+    <ul id="history-list"></ul>
+    <button type="button" id="clear-history">Limpar histórico</button>
+  </div>
+
+  <script src="app.js" defer></script>
 </body>
 </html>
