@@ -10,45 +10,42 @@
 <body>
   <h1>Busca de Preço</h1>
 
-  <div class="location-choice">
-    <label><input type="radio" name="loc" value="city" checked> Escolher município</label>
-    <label><input type="radio" name="loc" value="gps"> Usar minha localização</label>
-  </div>
-
-  <div id="city-block">
-    <label for="city">Município:</label>
-    <select id="city">
-      <option value="-9.6432331,-35.7190686">Maceió</option>
-      <option value="-9.751419,-36.659076">Arapiraca</option>
-      <option value="-9.407651,-36.300283">Palmeira dos Índios</option>
+  <div class="controls">
+    <div class="location-choice">
+      <label><input type="radio" name="loc" value="city" checked> Escolher município</label>
+      <label><input type="radio" name="loc" value="gps"> Usar minha localização</label>
+    </div>
+    <div id="city-block">
+      <label for="city">Município:</label>
+      <select id="city">
+        <option value="-9.6432331,-35.7190686">Maceió</option>
+        <option value="-9.751419,-36.659076">Arapiraca</option>
+        <option value="-9.407651,-36.300283">Palmeira dos Índios</option>
+      </select>
+    </div>
+    <label>Raio de busca:</label>
+    <div class="radius-control">
+      <button type="button" class="radius-btn" data-value="5">Perto<br><small>5 km</small></button>
+      <button type="button" class="radius-btn active" data-value="15">Médio<br><small>15 km</small></button>
+    </div>
+    <label for="barcode">Código de barras:</label>
+    <input id="barcode" type="search" inputmode="numeric" pattern="[0-9]*" placeholder="Digite..." />
+    <button type="button" id="btn-search">Pesquisar Preço</button>
+    <label for="ordenar">Ordenar por:</label>
+    <select id="ordenar">
+      <option value="preco-asc">Menor preço</option>
+      <option value="preco-desc">Maior preço</option>
+      <option value="favorito">Favoritos primeiro</option>
     </select>
   </div>
 
-  <label>Raio de busca:</label>
-  <div class="radius-control">
-    <button type="button" class="radius-btn" data-value="5">Perto<br><small>5 km</small></button>
-    <button type="button" class="radius-btn active" data-value="15">Médio<br><small>15 km</small></button>
-  </div>
-
-  <label for="barcode">Código de barras:</label>
-  <input id="barcode" type="search" inputmode="numeric" pattern="[0-9]*" placeholder="Digite..." />
-
-  <button type="button" id="btn-search">Pesquisar Preço</button>
-
-  <label for="ordenar">Ordenar por:</label>
-  <select id="ordenar">
-    <option value="preco-asc">Menor preço</option>
-    <option value="preco-desc">Maior preço</option>
-    <option value="favorito">Favoritos primeiro</option>
-  </select>
-
-  <!-- Loading overlay -->
   <div id="loading" class="loading-overlay">
     <div class="spinner"></div>
     <span>Buscando...</span>
   </div>
 
-  <div id="result"></div>
+  <div id="summary"></div>       <!-- QUANTIDADE E IMAGEM -->
+  <div id="result" class="cards"></div>
 
   <button id="open-modal" class="open-modal-btn" title="Ver todos em lista">
     <i class="fas fa-list"></i> Ver Lista Ordenada
