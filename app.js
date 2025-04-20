@@ -76,9 +76,9 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     const cardsHtml = `
-      <div class="product-header">
-        <p><strong>Produto:</strong> ${produtoNome}</p>
-        <img src="${produtoImg}" alt="Imagem do produto" style="max-width: 120px; margin: 0.5em 0;"/>
+      <div class="product-header" style="text-align: center; margin-bottom: 1em;">
+        <p style="font-size: 1.1em;"><strong>${produtoNome}</strong></p>
+        <img src="${produtoImg}" alt="Imagem do produto" style="max-width: 150px; display: block; margin: 0.5em auto;"/>
       </div>
       <div class="card-container">
         ${renderCard(menor, 'Menor preço')}
