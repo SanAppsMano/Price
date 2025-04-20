@@ -8,25 +8,28 @@
 </head>
 <body>
   <main>
-    <h1>Buscar Preço por Código de Barras</h1>
-    <input id="barcode" type="text" placeholder="Digite...">
-    <div>
-      <label>Localização:</label>
-      <label><input type="radio" name="loc" value="city" checked> Usar Cidade</label>
-    </div>
-    <div id="city-block">
-      <select id="city">
-        <option value="-9.6432331,-35.7190686">Maceió</option>
-      </select>
-    </div>
-    <div>
-      <button class="radius-btn active" data-value="5">Perto</button>
-      <button class="radius-btn" data-value="15">Mais Distante</button>
-    </div>
-    <button id="btn-search">Buscar</button>
-    <button id="open-modal">Ver Lista Ordenada</button>
-
-    <div id="result"></div>
+    <h1>Consulta de Preços</h1>
+    <section class="busca">
+      <input id="barcode" type="text" placeholder="Digite...">
+      <div class="opcoes">
+        <label>Localização:</label>
+        <label><input type="radio" name="loc" value="city" checked> Usar Cidade</label>
+      </div>
+      <div id="city-block">
+        <select id="city">
+          <option value="-9.6432331,-35.7190686">Maceió</option>
+        </select>
+      </div>
+      <div class="raios">
+        <button class="radius-btn active" data-value="5">Perto</button>
+        <button class="radius-btn" data-value="15">Mais Distante</button>
+      </div>
+      <div class="acoes">
+        <button id="btn-search">Buscar</button>
+        <button id="open-modal">Ver Lista Ordenada</button>
+      </div>
+    </section>
+    <section id="result"></section>
   </main>
 
   <!-- Modal -->
