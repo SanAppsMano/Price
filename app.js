@@ -1,14 +1,53 @@
 // app.js
 
+// — Referências DOM —
 const btnSearch        = document.getElementById("btn-search");
 const barcodeInput     = document.getElementById("barcode");
 const resultContainer  = document.getElementById("result");
 const summaryContainer = document.getElementById("summary");
 const loading          = document.getElementById("loading");
+
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 let selectedRadius     = document.querySelector('.radius-btn.active').dataset.value;
 
-// 1) Tratamento dos botões de raio
+// Histórico de buscas
+const historyList     = document.getElementById('history-list');
+const clearHistoryBtn = document.getElementById('clear-history');
+let historyArr        = JSON.parse(localStorage.getItem('priceSearchHistory') || '[]');
+
+function renderHistory() {
+  historyList.innerHTML = '';
+  historyArr.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'history-item';
+    li.innerHTML = `
+      <div class="history-thumb">
+        ${item.image
+          ? `<img src="${item.image}" alt="${item.name}">`
+          : `<div style="width:48px;height:48px;background:#ccc;border-radius:.25rem"></div>`
+        }
+      </div>
+      <div class="history-info">
+        <span class="history-name">${item.name}</span>
+        <span class="history-date">${item.date}</span>
+      </div>
+    `;
+    historyList.appendChild(li);
+  });
+}
+function saveHistory() {
+  localStorage.setItem('priceSearchHistory', JSON.stringify(historyArr));
+}
+clearHistoryBtn.addEventListener('click', () => {
+  if (confirm('Deseja limpar todo o histórico de buscas?')) {
+    historyArr = [];
+    saveHistory();
+    renderHistory();
+  }
+});
+renderHistory();
+
+// — Lógica de seleção de raio —
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
     radiusButtons.forEach(b => b.classList.remove('active'));
@@ -17,18 +56,17 @@ radiusButtons.forEach(btn => {
   });
 });
 
+// — Função de busca —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
-  if (!barcode) {
-    return alert("Digite um código de barras válido.");
-  }
+  if (!barcode) return alert("Digite um código de barras válido.");
 
-  // exibe loading e limpa resultados antigos
+  // mostra loading e limpa áreas
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // monta localização
+  // localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -46,10 +84,9 @@ btnSearch.addEventListener("click", async () => {
     [latitude, longitude] = document.getElementById("city").value.split(",");
   }
 
-  // e ordenação
   const order = document.getElementById("ordenar").value;
 
-  // 2) fetch POST
+  // chamada POST à função Netlify
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -65,37 +102,45 @@ btnSearch.addEventListener("click", async () => {
     });
     data = await res.json();
     console.log("Resposta da busca:", data);
-  } catch (err) {
+  } catch {
     loading.classList.remove("active");
     return alert("Erro ao buscar preços. Tente novamente mais tarde.");
   }
 
   loading.classList.remove("active");
 
-  // 3) NORMALIZAÇÃO do array de resultados
-  // se a função devolveu um array raiz, usa ele; senão, tenta data.dados
+  // normaliza resultado
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
 
   if (!dados.length) {
-    return resultContainer.innerHTML = `
+    resultContainer.innerHTML = `
       <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
     `;
+    return;
   }
 
-  // 4) resumo
+  // — Resumo com imagem e nome do produto —
   summaryContainer.innerHTML = `
+    <div class="image-card">
+      <img src="${data.imagemProdutoUrl}" alt="${data.nomeProduto}">
+      <h3>${data.nomeProduto}</h3>
+    </div>
     <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
-    ${data.imagemProdutoUrl ? `
-      <div class="image-card">
-        <img src="${data.imagemProdutoUrl}" alt="Imagem do produto">
-        <h3>${data.nomeProduto || ''}</h3>
-      </div>
-    ` : ''}
   `;
 
-  // 5) menor e maior preço
+  // — Adiciona ao histórico —
+  historyArr.unshift({
+    name:  data.nomeProduto || barcode,
+    image: data.imagemProdutoUrl || '',
+    date:  new Date().toLocaleString('pt-BR', { hour12: false })
+  });
+  if (historyArr.length > 20) historyArr.pop();
+  saveHistory();
+  renderHistory();
+
+  // — Encontra menor e maior preço e renderiza cards —
   const sorted = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length-1]];
 
@@ -119,5 +164,5 @@ btnSearch.addEventListener("click", async () => {
     resultContainer.appendChild(card);
   });
 
-  // 6) aqui você pode preencher o modal e histórico...
+  // — (Opcional) Modal e histórico adicionais… —
 });
