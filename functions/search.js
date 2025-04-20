@@ -1,74 +1,47 @@
-// functions/search.js
-
 exports.handler = async (event) => {
-  // Log the incoming event for debugging
-  console.log("Received event:", JSON.stringify(event));
-
-  // Handle CORS preflight
-  if (event.httpMethod === "OPTIONS") {
-    console.log("Preflight request, returning CORS headers");
-    return {
-      statusCode: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-      },
-    };
-  }
-
   try {
-    console.log("Parsing request body");
-    const { codigoDeBarras, city } = JSON.parse(event.body);
-    console.log("Parsed values:", { codigoDeBarras, city });
+    const body = JSON.parse(event.body);
+    const { latitude, longitude, raio, dias, codigoDeBarras } = body;
 
-    const [latitude, longitude] = city.split(",").map(Number);
-    console.log("Coordinates parsed:", { latitude, longitude });
+    if (!codigoDeBarras || latitude === undefined || longitude === undefined || !raio || !dias) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Parâmetros obrigatórios faltando.' })
+      };
+    }
 
-    const apiUrl = "http://api.sefaz.al.gov.br/sfz_nfce_api/api/public/consultarPrecosPorCodigoDeBarras";
-    console.log("Calling external API at:", apiUrl);
-
-    const resp = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "AppToken": process.env.APP_TOKEN,
+    // Simulação de resultado para teste — substitua com chamada real à API
+    const mockData = [
+      {
+        codEstabelecimento: '123',
+        nomFantasia: 'Mercadinho Barato',
+        valMinimoVendido: 5.99,
+        nomBairro: 'Centro',
+        nomMunicipio: 'Maceió',
+        numLatitude: latitude,
+        numLongitude: longitude
       },
-      body: JSON.stringify({
-        codigoDeBarras,
-        dias: 3,
-        latitude,
-        longitude,
-        raio: 15,
-      }),
-    });
-
-    console.log("External API response status:", resp.status, resp.statusText);
-
-    const data = await resp.json();
-    console.log("External API returned data:", JSON.stringify(data));
-
-    const statusCode = resp.ok ? 200 : resp.status;
-    console.log("Returning status code:", statusCode);
+      {
+        codEstabelecimento: '456',
+        nomRazaoSocial: 'Super Econômico',
+        valMinimoVendido: 6.49,
+        nomBairro: 'Ponta Verde',
+        nomMunicipio: 'Maceió',
+        numLatitude: latitude + 0.01,
+        numLongitude: longitude + 0.01
+      }
+    ];
 
     return {
-      statusCode,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify(data),
+      statusCode: 200,
+      body: JSON.stringify(mockData)
     };
 
   } catch (err) {
-    console.error("Error in handler:", err);
+    console.error("Erro no handler:", err);
     return {
       statusCode: 500,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ error: err.message }),
+      body: JSON.stringify({ error: 'Erro interno no servidor.' })
     };
   }
 };
