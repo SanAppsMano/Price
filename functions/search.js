@@ -1,47 +1,76 @@
 exports.handler = async (event) => {
-  try {
-    const body = JSON.parse(event.body);
-    const { latitude, longitude, raio, dias, codigoDeBarras } = body;
+  console.log("Received event:", JSON.stringify(event));
 
-    if (!codigoDeBarras || latitude === undefined || longitude === undefined || !raio || !dias) {
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    };
+  }
+
+  try {
+    const {
+      codigoDeBarras,
+      latitude,
+      longitude,
+      dias = 3,
+      raio = 15
+    } = JSON.parse(event.body);
+
+    if (
+      typeof codigoDeBarras !== "string" ||
+      typeof latitude !== "number" ||
+      typeof longitude !== "number"
+    ) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Parâmetros obrigatórios faltando.' })
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: JSON.stringify({ error: "Parâmetros inválidos" }),
       };
     }
 
-    // Simulação de resultado para teste — substitua com chamada real à API
-    const mockData = [
-      {
-        codEstabelecimento: '123',
-        nomFantasia: 'Mercadinho Barato',
-        valMinimoVendido: 5.99,
-        nomBairro: 'Centro',
-        nomMunicipio: 'Maceió',
-        numLatitude: latitude,
-        numLongitude: longitude
+    const apiUrl = "http://api.sefaz.al.gov.br/sfz_nfce_api/api/public/consultarPrecosPorCodigoDeBarras";
+
+    const resp = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "AppToken": process.env.APP_TOKEN,
       },
-      {
-        codEstabelecimento: '456',
-        nomRazaoSocial: 'Super Econômico',
-        valMinimoVendido: 6.49,
-        nomBairro: 'Ponta Verde',
-        nomMunicipio: 'Maceió',
-        numLatitude: latitude + 0.01,
-        numLongitude: longitude + 0.01
-      }
-    ];
+      body: JSON.stringify({
+        codigoDeBarras,
+        dias,
+        latitude,
+        longitude,
+        raio,
+      }),
+    });
+
+    const data = await resp.json();
+    const statusCode = resp.ok ? 200 : resp.status;
 
     return {
-      statusCode: 200,
-      body: JSON.stringify(mockData)
+      statusCode,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify(data),
     };
 
   } catch (err) {
-    console.error("Erro no handler:", err);
+    console.error("Error in handler:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Erro interno no servidor.' })
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
