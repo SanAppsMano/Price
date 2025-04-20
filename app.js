@@ -64,7 +64,10 @@ window.addEventListener('DOMContentLoaded', () => {
     else if (type === 'preco-desc') arr.sort((a,b)=>b.valMaximoVendido - a.valMaximoVendido);
     else if (type === 'favorito') arr.sort((a,b)=> (favorites.includes(b.codEstabelecimento)?1:0) - (favorites.includes(a.codEstabelecimento)?1:0));
 
-    resultDiv.innerHTML = arr.map(e => {
+    const total = arr.length;
+    let header = `<p><strong>Total de estabelecimentos encontrados:</strong> ${total}</p>`;
+
+    resultDiv.innerHTML = header + arr.map(e => {
       const isFav = favorites.includes(e.codEstabelecimento);
       const thumbnail = e.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${e.codGetin}` : 'https://via.placeholder.com/100';
       return `
