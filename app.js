@@ -1,4 +1,4 @@
-// app.js
+/* Updated app.js to include "Quando" field showing e.dthEmissaoUltimaVenda */
 
 // — Referências ao DOM —
 const btnSearch        = document.getElementById("btn-search");
@@ -59,6 +59,7 @@ function loadFromCache(item) {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : "—";
 
     const card = document.createElement("div");
     card.className = "card";
@@ -67,6 +68,7 @@ function loadFromCache(item) {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Quando:</strong> ${when}</p>
         <p style="font-size: 0.95rem;">
           <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
           <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
@@ -227,6 +229,7 @@ btnSearch.addEventListener("click", async () => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : "—";
 
     const card = document.createElement("div");
     card.className = "card";
@@ -234,10 +237,12 @@ btnSearch.addEventListener("click", async () => {
       <div class="card-header">${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio ||
+ '—'}</p>
+        <p><strong>Quando:</strong> ${when}</p>
         <p style="font-size: 0.95rem;">
           <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
-          <a href="${dirL}"	target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
         </p>
       </div>
     `;
@@ -259,11 +264,13 @@ openModalBtn.addEventListener('click', () => {
     card.className = 'card';
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : '—';
     card.innerHTML = `
       <div class="card-header">${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Quando:</strong> ${when}</p>
         <p style="font-size: 0.95rem;">
           <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
           <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
