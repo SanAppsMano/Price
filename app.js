@@ -47,8 +47,10 @@ function loadFromCache(item) {
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}`;
-    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+    // URLs de mapa usando numLatitude/numLongitude
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -158,8 +160,8 @@ btnSearch.addEventListener("click", async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         codigoDeBarras: barcode,
-        latitude:       latitude,
-        longitude:      longitude,
+        latitude:       Number(latitude),
+        longitude:      Number(longitude),
         raio:           Number(selectedRadius),
         dias:           3
       })
@@ -215,8 +217,9 @@ btnSearch.addEventListener("click", async () => {
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}`;
-    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+    // URLs de mapa usando numLatitude/numLongitude
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
 
     const card = document.createElement("div");
     card.className = "card";
