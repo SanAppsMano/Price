@@ -51,6 +51,11 @@
             <span class="btn-text">Pesquisar</span>
           </button>
         </div>
+        <!-- Botão de ver lista ordenada -->
+        <button id="open-modal" class="open-modal-btn" title="Ver todos em lista">
+          <i class="fas fa-list"></i>
+          <span class="btn-text">Ver Lista Ordenada</span>
+        </button>
       </div>
       <div id="loading" class="loading-overlay">
         <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -61,6 +66,15 @@
     <section>
       <div id="summary"></div>
       <div id="result" class="cards"></div>
+
+      <!-- Modal para lista ordenada -->
+      <div id="modal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="close-modal">&times;</span>
+          <h2>Lista de Preços</h2>
+          <ol id="modal-list"></ol>
+        </div>
+      </div>
     </section>
 
     <!-- Buscas Recentes -->
