@@ -147,7 +147,7 @@ btnSearch.addEventListener("click", async () => {
       return;
     }
   } else {
-    [latitude, longitude] = document.getElementById("city").value.split(",");
+    [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
   }
 
   // Chamada à Netlify Function
