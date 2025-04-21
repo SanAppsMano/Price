@@ -20,7 +20,6 @@ function saveHistory() {
 
 // Carrega um item do histórico (cache) na tela
 function loadFromCache(item) {
-  // Verifica se há dados em cache
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
     return;
@@ -31,7 +30,6 @@ function loadFromCache(item) {
 
   const { name: productName, image: productImg, dados } = item;
 
-  // Cabeçalho do produto
   summaryContainer.innerHTML = `
     <div class="product-header">
       ${productImg
@@ -42,7 +40,6 @@ function loadFromCache(item) {
     </div>
   `;
 
-  // Cards
   resultContainer.innerHTML = "";
   const sorted = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
@@ -56,8 +53,7 @@ function loadFromCache(item) {
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
         <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
            target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
@@ -68,7 +64,7 @@ function loadFromCache(item) {
   });
 }
 
-// Renderiza a lista horizontal de histórico
+// Renderiza histórico
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -102,7 +98,7 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// Renderiza histórico ao iniciar
+// Renderiza ao iniciar
 renderHistory();
 
 // — Seleção de raio —
@@ -115,15 +111,12 @@ radiusButtons.forEach(btn => {
   });
 });
 
-// — Função principal de busca —
+// — Busca principal —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
-  if (!barcode) {
-    alert("Digite um código de barras válido.");
-    return;
-  }
+  if (!barcode) return alert("Digite um código de barras válido.");
 
-  // Troca o texto do botão e aplica a fonte nova
+  // Ajusta texto do botão
   btnSearch.textContent = "Atualizar Preço";
   btnSearch.classList.add("btn-update-font");
 
@@ -150,8 +143,6 @@ btnSearch.addEventListener("click", async () => {
     [latitude, longitude] = document.getElementById("city").value.split(",");
   }
 
-  const order = document.getElementById("ordenar").value;
-
   // Chamada POST
   let data;
   try {
@@ -176,7 +167,7 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // Restaura o texto e fonte do botão
+  // Restaura botão
   btnSearch.textContent = "Pesquisar Preço";
   btnSearch.classList.remove("btn-update-font");
 
@@ -185,10 +176,9 @@ btnSearch.addEventListener("click", async () => {
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    resultContainer.innerHTML = `
-      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
+    return resultContainer.innerHTML = `
+      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
     `;
-    return;
   }
 
   // Cabeçalho do produto
@@ -208,7 +198,7 @@ btnSearch.addEventListener("click", async () => {
     </div>
   `;
 
-  // Adiciona ao histórico (com `dados`)
+  // Atualiza histórico
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   if (historyArr.length > 20) historyArr.pop();
   saveHistory();
@@ -227,8 +217,7 @@ btnSearch.addEventListener("click", async () => {
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
         <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
            target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
