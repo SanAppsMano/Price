@@ -47,8 +47,8 @@ function loadFromCache(item) {
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const href = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
-
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -58,9 +58,10 @@ function loadFromCache(item) {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a href="${href}" target="_blank">
-          <i class="fas fa-map-marker-alt"></i> Como chegar
-        </a>
+        <p>
+          <a href="${mapL}" target="_blank">Ver no mapa</a> |
+          <a href="${dirL}" target="_blank">Como chegar</a>
+        </p>
       </div>
     `;
     resultContainer.appendChild(card);
@@ -146,9 +147,7 @@ btnSearch.addEventListener("click", async () => {
       return;
     }
   } else {
-    [latitude, longitude] = document.getElementById("city").value
-      .split(",")
-      .map(Number);
+    [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
   }
 
   // Chamada à Netlify Function
@@ -213,10 +212,11 @@ btnSearch.addEventListener("click", async () => {
 
   // Renderiza cards de menor e maior preço
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menorItem, maiorItem] = [sorted[0], sorted[sorted.length - 1]];
-  [menorItem, maiorItem].forEach((e, i) => {
+  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
+  [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const href     = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
 
     const card = document.createElement("div");
     card.className = "card";
@@ -227,9 +227,10 @@ btnSearch.addEventListener("click", async () => {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a href="${href}" target="_blank">
-          <i class="fas fa-map-marker-alt"></i> Como chegar
-        </a>
+        <p>
+          <a href="${mapL}" target="_blank">Ver no mapa</a> |
+          <a href="${dirL}" target="_blank">Como chegar</a>
+        </p>
       </div>
     `;
     resultContainer.appendChild(card);
