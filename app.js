@@ -266,11 +266,4 @@ btnSearch.addEventListener("click", async () => {
   [minItem, maxItem].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const mapL     = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
-    const dirL     = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-
-    let regText = "";
-    if (e.dthEmissaoUltimaVenda) {
-      const saleDate = new Date(e.dthEmissaoUltimaVenda);
-      regText = `<p style="font-size:0.75rem;color:var(--color-gray);margin-top:0.5rem;">
-                   Registrado há ${formatRelativeTime(saleDate)}
-                 `
+    const dirL     = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${
