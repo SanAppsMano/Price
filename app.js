@@ -246,3 +246,22 @@ btnSearch.addEventListener("click", async () => {
     resultContainer.appendChild(card);
   });
 });
+// app.js
+
+// — Seu código atual permanece inalterado —
+... (todo o conteúdo existente) ...
+
+// ===== Adições para footer & modal =====
+// Abre modal ao tocar no footer
+document.getElementById('by-sanapps').addEventListener('click', () => {
+  document.getElementById('sanapps-modal').classList.add('active');
+});
+
+// Fecha modal ao clicar no X ou fora do card
+const modal = document.getElementById('sanapps-modal');
+modal.querySelector('.modal-close').addEventListener('click', () => {
+  modal.classList.remove('active');
+});
+modal.addEventListener('click', e => {
+  if (e.target === modal) modal.classList.remove('active');
+});
