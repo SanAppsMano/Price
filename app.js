@@ -9,14 +9,21 @@ const loading          = document.getElementById("loading");
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 
 // — Histórico —
-const historyListEl   = document.getElementById("history-list");
-const clearHistoryBtn = document.getElementById("clear-history");
-let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
+const historyListEl    = document.getElementById("history-list");
+const clearHistoryBtn  = document.getElementById("clear-history");
+let historyArr         = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 
 // Persiste histórico em localStorage
 function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
+
+// — Modal de lista ordenada —
+const openModalBtn     = document.getElementById("open-modal");
+const closeModalBtn    = document.getElementById("close-modal");
+const modal            = document.getElementById("modal");
+const modalList        = document.getElementById("modal-list");
+let currentResults     = [];
 
 // Renderiza o resumo + cards a partir do cache
 function loadFromCache(item) {
@@ -24,6 +31,9 @@ function loadFromCache(item) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
     return;
   }
+
+  // Atualiza currentResults
+  currentResults = item.dados;
 
   // Preenche o campo de código de barras
   barcodeInput.value = item.code;
@@ -47,26 +57,19 @@ function loadFromCache(item) {
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    // URLs de mapa usando numLatitude/numLongitude
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
 
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
-      </div>
+      <div class="card-header">${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <p style="font-size: 0.95rem;">
-          <a href="${mapL}" target="_blank">
-            <i class="fas fa-map-marker-alt"></i> Ver no mapa
-          </a> |
-          <a href="${dirL}" target="_blank">
-            <i class="fas fa-map-marker-alt"></i> Como chegar
-          </a>
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
         </p>
       </div>
     `;
@@ -171,7 +174,6 @@ btnSearch.addEventListener("click", async () => {
       })
     });
     data = await res.json();
-    console.log("Resposta da busca:", data);
   } catch {
     loading.classList.remove("active");
     alert("Erro ao buscar preços. Tente novamente mais tarde.");
@@ -181,7 +183,7 @@ btnSearch.addEventListener("click", async () => {
   loading.classList.remove("active");
 
   // Restaura texto do botão
-  btnSearch.textContent = "Pesquisar Preço";
+  btnSearch.textContent = "Pesquisar";
   btnSearch.classList.remove("btn-update-font");
 
   // Normaliza resultados
@@ -189,10 +191,12 @@ btnSearch.addEventListener("click", async () => {
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    return resultContainer.innerHTML = `
-      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
-    `;
+    resultContainer.innerHTML = `<p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>`;
+    return;
   }
+
+  // Atualiza currentResults
+  currentResults = dados;
 
   // Cabeçalho do produto com overlay
   const primeiro    = dados[0];
@@ -227,22 +231,51 @@ btnSearch.addEventListener("click", async () => {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
-      <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
-      </div>
+      <div class="card-header">${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <p style="font-size: 0.95rem;">
-          <a href="${mapL}" target="_blank">
-            <i class="fas fa-map-marker-alt"></i> Ver no mapa
-          </a> |
-          <a href="${dirL}" target="_blank">
-            <i class="fas fa-map-marker-alt"></i> Como chegar
-          </a>
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}"	target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
         </p>
       </div>
     `;
     resultContainer.appendChild(card);
   });
+});
+
+// — Funcionalidade do Modal —
+openModalBtn.addEventListener('click', () => {
+  if (!currentResults.length) {
+    alert('Não há resultados para exibir. Faça uma busca primeiro.');
+    return;
+  }
+  modalList.innerHTML = '';
+  const sortedAll = [...currentResults].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
+  sortedAll.forEach(e => {
+    const li = document.createElement('li');
+    const card = document.createElement('div');
+    card.className = 'card';
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    card.innerHTML = `
+      <div class="card-header">${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
+      <div class="card-body">
+        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p style="font-size: 0.95rem;">
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
+        </p>
+      </div>
+    `;
+    li.appendChild(card);
+    modalList.appendChild(li);
+  });
+  modal.classList.add('active');
+});
+closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
+modal.addEventListener('click', e => {
+  if (e.target === modal) modal.classList.remove('active');
 });
