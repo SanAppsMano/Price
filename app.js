@@ -18,7 +18,7 @@ function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Renderiza o resumo + cards a partir do cache
+// Carrega um item do histórico (cache) na interface
 function loadFromCache(item) {
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
@@ -34,14 +34,17 @@ function loadFromCache(item) {
   summaryContainer.innerHTML = `
     <div class="product-header">
       <div class="product-image-wrapper">
-        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
+        <img
+          src="${productImg || 'https://via.placeholder.com/150'}"
+          alt="${productName}"
+        />
         <div class="product-name-overlay">${productName}</div>
       </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
     </div>
   `;
 
-  // Renderiza cards
+  // Renderiza cards de menor e maior preço
   resultContainer.innerHTML = "";
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
@@ -68,7 +71,7 @@ function loadFromCache(item) {
   });
 }
 
-// Desenha lista horizontal do histórico
+// Renderiza histórico horizontal clicável
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -198,14 +201,17 @@ btnSearch.addEventListener("click", async () => {
   summaryContainer.innerHTML = `
     <div class="product-header">
       <div class="product-image-wrapper">
-        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
+        <img
+          src="${productImg || 'https://via.placeholder.com/150'}"
+          alt="${productName}"
+        />
         <div class="product-name-overlay">${productName}</div>
       </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
     </div>
   `;
 
-  // Atualiza histórico
+  // Atualiza o histórico
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   saveHistory();
   renderHistory();
@@ -225,7 +231,7 @@ btnSearch.addEventListener("click", async () => {
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <a
-          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
+          href="https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${e.latitude},${e.longitude}"
           target="_blank"
         >
           <i class="fas fa-map-marker-alt"></i> Como chegar
