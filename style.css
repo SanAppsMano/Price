@@ -1,246 +1,183 @@
-// app.js
-
-// — Referências ao DOM —
-const btnSearch        = document.getElementById("btn-search");
-const barcodeInput     = document.getElementById("barcode");
-const resultContainer  = document.getElementById("result");
-const summaryContainer = document.getElementById("summary");
-const loading          = document.getElementById("loading");
-const radiusButtons    = document.querySelectorAll('.radius-btn');
-
-// — Histórico —
-const historyListEl   = document.getElementById("history-list");
-const clearHistoryBtn = document.getElementById("clear-history");
-let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
-
-// Persiste histórico em localStorage
-function saveHistory() {
-  localStorage.setItem("searchHistory", JSON.stringify(historyArr));
+/* ===== Global ===== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 1rem;
+  color: #333;
 }
 
-// Carrega um item do histórico (cache) na interface
-function loadFromCache(item) {
-  if (!item.dados || !Array.isArray(item.dados)) {
-    alert("Sem dados em cache para este produto. Faça a busca primeiro.");
-    return;
-  }
-
-  // Preenche o campo de código de barras
-  barcodeInput.value = item.code;
-
-  const { name: productName, image: productImg, dados } = item;
-
-  // Cabeçalho com nome sobre a imagem
-  summaryContainer.innerHTML = `
-    <div class="product-header">
-      <div class="product-image-wrapper">
-        <img
-          src="${productImg || 'https://via.placeholder.com/150'}"
-          alt="${productName}"
-        />
-        <div class="product-name-overlay">${productName}</div>
-      </div>
-      <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
-    </div>
-  `;
-
-  // Renderiza cards de menor e maior preço
-  resultContainer.innerHTML = "";
-  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e, i) => {
-    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
-      </div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a
-          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
-          target="_blank"
-        >
-          <i class="fas fa-map-marker-alt"></i> Como chegar
-        </a>
-      </div>
-    `;
-    resultContainer.appendChild(card);
-  });
+h1 {
+  text-align: center;
+  margin-bottom: 1rem;
 }
 
-// Desenha o histórico horizontal clicável
-function renderHistory() {
-  historyListEl.innerHTML = "";
-  historyArr.forEach(item => {
-    const li = document.createElement("li");
-    li.className = "history-item";
-
-    const btn = document.createElement("button");
-    btn.title = item.name;
-    btn.addEventListener("click", () => loadFromCache(item));
-
-    if (item.image) {
-      const img = document.createElement("img");
-      img.src = item.image;
-      img.alt = item.name;
-      btn.appendChild(img);
-    } else {
-      btn.textContent = item.name;
-    }
-
-    li.appendChild(btn);
-    historyListEl.appendChild(li);
-  });
+/* ===== Controls ===== */
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  align-items: end;
+  margin-bottom: 1rem;
 }
 
-// Limpa todo o histórico
-clearHistoryBtn.addEventListener("click", () => {
-  if (confirm("Deseja limpar o histórico de buscas?")) {
-    historyArr = [];
-    saveHistory();
-    renderHistory();
-  }
-});
+.radius-control {
+  display: flex;
+  gap: 0.5rem;
+}
 
-// Carrega histórico ao iniciar
-renderHistory();
+.radius-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  background: #fff;
+  text-align: center;
+  cursor: pointer;
+}
 
-// — Seleção de raio de busca —
-let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
-radiusButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    radiusButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedRadius = btn.dataset.value;
-  });
-});
+.radius-btn.active {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
 
-// — Função principal de busca —
-btnSearch.addEventListener("click", async () => {
-  const barcode = barcodeInput.value.trim();
-  if (!barcode) {
-    alert("Digite um código de barras válido.");
-    return;
-  }
+/* ===== Loading Overlay ===== */
+.loading-overlay {
+  display: none;
+  text-align: center;
+  margin: 1rem 0;
+}
 
-  // Alteração de botão para "Atualizar Preço"
-  btnSearch.textContent = "Atualizar Preço";
-  btnSearch.classList.add("btn-update-font");
+.loading-overlay.active {
+  display: block;
+}
 
-  loading.classList.add("active");
-  resultContainer.innerHTML  = "";
-  summaryContainer.innerHTML = "";
+/* ===== Cards ===== */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 
-  // Monta localização
-  const locType = document.querySelector('input[name="loc"]:checked').value;
-  let latitude, longitude;
-  if (locType === 'gps') {
-    try {
-      const pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej)
-      );
-      latitude  = pos.coords.latitude;
-      longitude = pos.coords.longitude;
-    } catch {
-      loading.classList.remove("active");
-      alert("Não foi possível obter sua localização.");
-      return;
-    }
-  } else {
-    [latitude, longitude] = document.getElementById("city").value.split(",");
-  }
+.card,
+.image-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  flex: 1 1 300px;
+}
 
-  // Chamada à Netlify Function
-  let data;
-  try {
-    const res = await fetch('/.netlify/functions/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        codigoDeBarras: barcode,
-        latitude:       Number(latitude),
-        longitude:      Number(longitude),
-        raio:           Number(selectedRadius),
-        dias:           3
-      })
-    });
-    data = await res.json();
-    console.log("Resposta da busca:", data);
-  } catch {
-    loading.classList.remove("active");
-    alert("Erro ao buscar preços. Tente novamente mais tarde.");
-    return;
-  }
+.image-card {
+  text-align: center;
+}
 
-  loading.classList.remove("active");
+.image-card img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
 
-  // Restaura texto do botão
-  btnSearch.textContent = "Pesquisar Preço";
-  btnSearch.classList.remove("btn-update-font");
+.image-card h3 {
+  margin-top: 0.5rem;
+}
 
-  // Normaliza resultados
-  const dados = Array.isArray(data)
-    ? data
-    : (Array.isArray(data.dados) ? data.dados : []);
-  if (!dados.length) {
-    resultContainer.innerHTML = `
-      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
-    `;
-    return;
-  }
+.card-header {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
 
-  // Cabeçalho do produto com overlay
-  const primeiro    = dados[0];
-  const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
-  const productImg  = primeiro.codGetin
-    ? `https://cdn-cosmos.bluesoft.com.br/products/${primeiro.codGetin}`
-    : '';
+.card-body p {
+  margin: 0.25rem 0;
+}
 
-  summaryContainer.innerHTML = `
-    <div class="product-header">
-      <div class="product-image-wrapper">
-        <img
-          src="${productImg || 'https://via.placeholder.com/150'}"
-          alt="${productName}"
-        />
-        <div class="product-name-overlay">${productName}</div>
-      </div>
-      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
-    </div>
-  `;
+/* ===== Product Header com Overlay ===== */
+.product-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
 
-  // Atualiza e persiste histórico
-  historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
-  saveHistory();
-  renderHistory();
+.product-image-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
 
-  // Renderiza cards de menor e maior preço
-  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e, i) => {
-    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
-      </div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a
-          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
-          target="_blank"
-        >
-          <i class="fas fa-map-marker-alt"></i> Como chegar
-        </a>
-      </div>
-    `;
-    resultContainer.appendChild(card);
-  });
-});
+.product-image-wrapper img {
+  display: block;
+  max-width: 150px;
+  height: auto;
+}
+
+.product-name-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* ===== Search Button Update Font ===== */
+#btn-search.btn-update-font {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+/* ===== Search History ===== */
+#history-list {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 1rem;
+  overflow-x: auto;
+}
+
+.history-item {
+  flex: 0 0 auto;
+}
+
+.history-item button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.history-item img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.history-item img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Clear History Button ===== */
+#clear-history {
+  display: block;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+#clear-history:hover {
+  background: #c82333;
+}
