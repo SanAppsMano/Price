@@ -19,11 +19,12 @@ function saveHistory() {
 }
 
 // Renderiza o resumo + cards a partir do cache
-decline loadFromCache(item) {
+function loadFromCache(item) {
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
     return;
   }
+
   // Preenche o campo de código de barras
   barcodeInput.value = item.code;
 
@@ -244,19 +245,4 @@ btnSearch.addEventListener("click", async () => {
     `;
     resultContainer.appendChild(card);
   });
-});
-
-// ===== Adições para footer & modal =====
-// Abre modal ao tocar no footer
-document.getElementById('by-sanapps').addEventListener('click', () => {
-  document.getElementById('sanapps-modal').classList.add('active');
-});
-
-// Fecha modal ao clicar no X ou fora do card
-const modal = document.getElementById('sanapps-modal');
-modal.querySelector('.modal-close').addEventListener('click', () => {
-  modal.classList.remove('active');
-});
-modal.addEventListener('click', e => {
-  if (e.target === modal) modal.classList.remove('active');
 });
