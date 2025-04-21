@@ -71,7 +71,7 @@ function loadFromCache(item) {
   });
 }
 
-// Renderiza histórico horizontal clicável
+// Desenha histórico horizontal clicável
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -134,7 +134,7 @@ btnSearch.addEventListener("click", async () => {
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // Localização
+  // Localização (mantemos apenas para a busca; não usamos aqui como origin)
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -231,7 +231,7 @@ btnSearch.addEventListener("click", async () => {
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <a
-          href="https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${e.latitude},${e.longitude}"
+          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
           target="_blank"
         >
           <i class="fas fa-map-marker-alt"></i> Como chegar
