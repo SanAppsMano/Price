@@ -13,12 +13,12 @@ const historyListEl   = document.getElementById("history-list");
 const clearHistoryBtn = document.getElementById("clear-history");
 let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 
-// Persistir histórico
+// Persiste histórico em localStorage
 function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Carrega um item do histórico (cache) na tela
+// Carrega um item do histórico (cache) na interface
 function loadFromCache(item) {
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
@@ -30,32 +30,40 @@ function loadFromCache(item) {
 
   const { name: productName, image: productImg, dados } = item;
 
+  // Cabeçalho com nome sobre a imagem
   summaryContainer.innerHTML = `
     <div class="product-header">
-      ${productImg
-        ? `<img src="${productImg}" alt="${productName}" />`
-        : `<p>${productName}</p>`
-      }
+      <div class="product-image-wrapper">
+        <img
+          src="${productImg || 'https://via.placeholder.com/150'}"
+          alt="${productName}"
+        />
+        <div class="product-name-overlay">${productName}</div>
+      </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
     </div>
   `;
 
+  // Renderiza cards de menor e maior preço
   resultContainer.innerHTML = "";
-  const sorted = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
+  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e,i) => {
+  [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const card     = document.createElement("div");
+    const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-header">
-        ${priceLab} — ${e.nomFantasia||e.nomRazaoSocial||'—'}
+        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
-        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
-           target="_blank">
+        <p><strong>Bairro/Município:</strong>
+           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
+          target="_blank"
+        >
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
       </div>
@@ -64,7 +72,7 @@ function loadFromCache(item) {
   });
 }
 
-// Renderiza histórico
+// Desenha o histórico horizontal clicável
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -89,7 +97,7 @@ function renderHistory() {
   });
 }
 
-// Limpar histórico
+// Limpa todo o histórico
 clearHistoryBtn.addEventListener("click", () => {
   if (confirm("Deseja limpar o histórico de buscas?")) {
     historyArr = [];
@@ -98,10 +106,10 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// Renderiza ao iniciar
+// Carrega histórico ao iniciar
 renderHistory();
 
-// — Seleção de raio —
+// — Seleção de raio de busca —
 let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -111,12 +119,15 @@ radiusButtons.forEach(btn => {
   });
 });
 
-// — Busca principal —
+// — Função principal de busca —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
-  if (!barcode) return alert("Digite um código de barras válido.");
+  if (!barcode) {
+    alert("Digite um código de barras válido.");
+    return;
+  }
 
-  // Ajusta texto do botão
+  // Alteração de botão para "Atualizar Preço"
   btnSearch.textContent = "Atualizar Preço";
   btnSearch.classList.add("btn-update-font");
 
@@ -124,7 +135,7 @@ btnSearch.addEventListener("click", async () => {
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // Localização
+  // Monta localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -143,7 +154,7 @@ btnSearch.addEventListener("click", async () => {
     [latitude, longitude] = document.getElementById("city").value.split(",");
   }
 
-  // Chamada POST
+  // Chamada à Netlify Function
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -167,7 +178,7 @@ btnSearch.addEventListener("click", async () => {
 
   loading.classList.remove("active");
 
-  // Restaura botão
+  // Restaura texto do botão
   btnSearch.textContent = "Pesquisar Preço";
   btnSearch.classList.remove("btn-update-font");
 
@@ -176,12 +187,13 @@ btnSearch.addEventListener("click", async () => {
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    return resultContainer.innerHTML = `
-      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
+    resultContainer.innerHTML = `
+      <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
     `;
+    return;
   }
 
-  // Cabeçalho do produto
+  // Cabeçalho do produto com overlay
   const primeiro    = dados[0];
   const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
   const productImg  = primeiro.codGetin
@@ -190,36 +202,41 @@ btnSearch.addEventListener("click", async () => {
 
   summaryContainer.innerHTML = `
     <div class="product-header">
-      ${productImg
-        ? `<img src="${productImg}" alt="${productName}" />`
-        : `<p>${productName}</p>`
-      }
+      <div class="product-image-wrapper">
+        <img
+          src="${productImg || 'https://via.placeholder.com/150'}"
+          alt="${productName}"
+        />
+        <div class="product-name-overlay">${productName}</div>
+      </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
     </div>
   `;
 
-  // Atualiza histórico
+  // Atualiza e persiste histórico
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
-  if (historyArr.length > 20) historyArr.pop();
   saveHistory();
   renderHistory();
 
-  // Renderiza cards
+  // Renderiza cards de menor e maior preço
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e,i) => {
+  [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const card     = document.createElement("div");
+    const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-header">
-        ${priceLab} — ${e.nomFantasia||e.nomRazaoSocial||'—'}
+        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
-        <a href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
-           target="_blank">
+        <p><strong>Bairro/Município:</strong>
+           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
+          target="_blank"
+        >
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
       </div>
