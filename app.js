@@ -60,9 +60,13 @@ function loadFromCache(item) {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <p>
-          <a href="${mapL}" target="_blank">Ver no mapa</a> |
-          <a href="${dirL}" target="_blank">Como chegar</a>
+        <p style="font-size: 0.95rem;">
+          <a href="${mapL}" target="_blank">
+            <i class="fas fa-map-marker-alt"></i> Ver no mapa
+          </a> |
+          <a href="${dirL}" target="_blank">
+            <i class="fas fa-map-marker-alt"></i> Como chegar
+          </a>
         </p>
       </div>
     `;
@@ -213,11 +217,10 @@ btnSearch.addEventListener("click", async () => {
   renderHistory();
 
   // Renderiza cards de menor e maior preço
-  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e, i) => {
+  const sorted2 = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
+  const [minItem, maxItem] = [sorted2[0], sorted2[sorted2.length - 1]];
+  [minItem, maxItem].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    // URLs de mapa usando numLatitude/numLongitude
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
 
@@ -230,9 +233,13 @@ btnSearch.addEventListener("click", async () => {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <p>
-          <a href="${mapL}" target="_blank">Ver no mapa</a> |
-          <a href="${dirL}" target="_blank">Como chegar</a>
+        <p style="font-size: 0.95rem;">
+          <a href="${mapL}" target="_blank">
+            <i class="fas fa-map-marker-alt"></i> Ver no mapa
+          </a> |
+          <a href="${dirL}" target="_blank">
+            <i class="fas fa-map-marker-alt"></i> Como chegar
+          </a>
         </p>
       </div>
     `;
