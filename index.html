@@ -38,9 +38,15 @@
           <button class="radius-btn active" data-value="15">15 km</button>
         </div>
         <div class="barcode-wrap">
-          <input id="barcode" type="search" placeholder="Código de barras" />
+          <input
+            id="barcode"
+            type="tel"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="Código de barras"
+          />
           <button id="btn-search" class="btn-primary">
-            <i class="fas fa-search"></i>  
+            <i class="fas fa-search"></i>
             <span class="btn-text">Pesquisar</span>
           </button>
         </div>
