@@ -8,7 +8,7 @@ const summaryContainer = document.getElementById("summary");
 const loading          = document.getElementById("loading");
 const radiusButtons    = document.querySelectorAll('.radius-btn');
 
-// — Histórico —
+// — Histórico & Cache —
 const historyListEl   = document.getElementById("history-list");
 const clearHistoryBtn = document.getElementById("clear-history");
 let historyArr        = JSON.parse(localStorage.getItem("searchHistory") || "[]");
@@ -18,7 +18,7 @@ function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Renderiza histórico com thumbnail, cidade e timestamp
+// Renderiza histórico com thumbnail + cidade + data/hora
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -28,6 +28,7 @@ function renderHistory() {
     if (item.image) {
       const wrapper = document.createElement("div");
       wrapper.className = "history-item-wrapper";
+
       const img = document.createElement("img");
       img.src = item.image;
       img.alt = item.name;
@@ -54,15 +55,15 @@ function renderHistory() {
   });
 }
 
-// Carrega do histórico para a tela
+// Carrega do histórico para a interface
 function loadFromCache(item) {
-  // ... seu código atual de loadFromCache sem alterações ...
+  // … seu loadFromCache original aqui, sem alterações …
 }
 
-// Inicializa histórico na carga
+// Inicializa histórico
 renderHistory();
 
-// Seleção de raio
+// — Seleção de raio —
 let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
 radiusButtons.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -72,18 +73,26 @@ radiusButtons.forEach(btn => {
   });
 });
 
-// Função principal de busca
+// — Modal ordenado de lista —
+const openModalBtn  = document.getElementById("open-modal");
+const closeModalBtn = document.getElementById("close-modal");
+const modal         = document.getElementById("modal");
+const modalList     = document.getElementById("modal-list");
+let currentResults  = [];
+
+// — Busca principal —
 btnSearch.addEventListener("click", async () => {
   const barcode = barcodeInput.value.trim();
   if (!barcode) { alert("Digite um código de barras válido."); return; }
 
+  // troca texto e mostra loading
   btnSearch.textContent = "Atualizar Preço";
   btnSearch.classList.add("btn-update-font");
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // Localização
+  // obtém localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -102,7 +111,7 @@ btnSearch.addEventListener("click", async () => {
     [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
   }
 
-  // Chamada à API
+  // chama a Netlify Function
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -123,18 +132,25 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
+  // esconde loading, restaura botão
   loading.classList.remove("active");
-  btnSearch.textContent = "Pesquisar Preço";
+  btnSearch.textContent = "Pesquisar";
   btnSearch.classList.remove("btn-update-font");
 
-  // Normaliza e verifica resultados
-  const dados = Array.isArray(data) ? data : (Array.isArray(data.dados) ? data.dados : []);
+  // normaliza
+  const dados = Array.isArray(data)
+    ? data
+    : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    resultContainer.innerHTML = `<p>Nenhum estabelecimento em até <strong>${selectedRadius} km</strong>.</p>`;
+    resultContainer.innerHTML =
+      `<p>Nenhum estabelecimento em até <strong>${selectedRadius} km</strong>.</p>`;
     return;
   }
 
-  // Cabeçalho do produto
+  // atualiza currentResults
+  currentResults = dados;
+
+  // renderiza summary
   const primeiro    = dados[0];
   const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
   const productImg  = primeiro.codGetin
@@ -150,7 +166,7 @@ btnSearch.addEventListener("click", async () => {
     </div>
   `;
 
-  // Salva no histórico com cidade e timestamp
+  // salva no histórico com city + timestamp
   const now     = Date.now();
   const cityLbl = locType === 'gps'
     ? 'Minha localização'
@@ -166,11 +182,11 @@ btnSearch.addEventListener("click", async () => {
   saveHistory();
   renderHistory();
 
-  // Renderiza Menor/Maior preço
+  // renderiza cards Menor/Maior
   const sorted2      = [...dados].sort((a,b)=>a.valMinimoVendido-b.valMinimoVendido);
   const [minItem,maxItem] = [sorted2[0], sorted2[sorted2.length-1]];
   [minItem, maxItem].forEach((e,i)=>{
-    const priceLab = i===0?"Menor preço":"Maior preço";
+    const priceLab = i===0 ? "Menor preço" : "Maior preço";
     const mapL     = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL     = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
     const card = document.createElement("div");
@@ -190,10 +206,43 @@ btnSearch.addEventListener("click", async () => {
   });
 });
 
-// ===== Footer & Modal =====
+// — Lista ordenada Modal —
+openModalBtn.addEventListener('click', () => {
+  if (!currentResults.length) {
+    alert('Não há resultados para exibir. Faça uma busca primeiro.');
+    return;
+  }
+  modalList.innerHTML = '';
+  const sortedAll = [...currentResults].sort((a,b)=>a.valMinimoVendido-b.valMinimoVendido);
+  sortedAll.forEach(e => {
+    const li   = document.createElement('li');
+    const card = document.createElement('div');
+    card.className = 'card';
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    card.innerHTML=`
+      <div class="card-header">${e.nomFantasia||e.nomRazaoSocial||'—'}</div>
+      <div class="card-body">
+        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
+        <p style="font-size:0.95rem;">
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
+        </p>
+      </div>
+    `;
+    li.appendChild(card);
+    modalList.appendChild(li);
+  });
+  modal.classList.add('active');
+});
+closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
+modal.addEventListener('click', e => { if (e.target===modal) modal.classList.remove('active'); });
+
+// — Footer & Contato Modal —
 document.getElementById('by-sanapps').addEventListener('click', () => {
   document.getElementById('sanapps-modal').classList.add('active');
 });
-const modal = document.getElementById('sanapps-modal');
-modal.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('active'));
-modal.addEventListener('click', e => { if (e.target===modal) modal.classList.remove('active'); });
+const contactModal = document.getElementById('sanapps-modal');
+contactModal.querySelector('.modal-close').addEventListener('click', () => contactModal.classList.remove('active'));
+contactModal.addEventListener('click', e => { if(e.target===contactModal) contactModal.classList.remove('active'); });
