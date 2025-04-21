@@ -18,7 +18,7 @@ function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Carrega um item do histórico (cache) na interface
+// Renderiza o resumo + cards a partir do cache
 function loadFromCache(item) {
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
@@ -30,21 +30,18 @@ function loadFromCache(item) {
 
   const { name: productName, image: productImg, dados } = item;
 
-  // Cabeçalho com nome sobre a imagem
+  // Cabeçalho com overlay de nome
   summaryContainer.innerHTML = `
     <div class="product-header">
       <div class="product-image-wrapper">
-        <img
-          src="${productImg || 'https://via.placeholder.com/150'}"
-          alt="${productName}"
-        />
+        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
         <div class="product-name-overlay">${productName}</div>
       </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
     </div>
   `;
 
-  // Renderiza cards de menor e maior preço
+  // Renderiza cards
   resultContainer.innerHTML = "";
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
@@ -58,10 +55,9 @@ function loadFromCache(item) {
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <a
-          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
+          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
           target="_blank"
         >
           <i class="fas fa-map-marker-alt"></i> Como chegar
@@ -72,7 +68,7 @@ function loadFromCache(item) {
   });
 }
 
-// Desenha o histórico horizontal clicável
+// Desenha lista horizontal do histórico
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
@@ -97,7 +93,7 @@ function renderHistory() {
   });
 }
 
-// Limpa todo o histórico
+// Limpa histórico
 clearHistoryBtn.addEventListener("click", () => {
   if (confirm("Deseja limpar o histórico de buscas?")) {
     historyArr = [];
@@ -106,7 +102,7 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
-// Carrega histórico ao iniciar
+// Renderiza histórico ao iniciar
 renderHistory();
 
 // — Seleção de raio de busca —
@@ -127,7 +123,7 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // Alteração de botão para "Atualizar Preço"
+  // Ajusta texto do botão
   btnSearch.textContent = "Atualizar Preço";
   btnSearch.classList.add("btn-update-font");
 
@@ -135,7 +131,7 @@ btnSearch.addEventListener("click", async () => {
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
-  // Monta localização
+  // Localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -187,10 +183,9 @@ btnSearch.addEventListener("click", async () => {
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    resultContainer.innerHTML = `
+    return resultContainer.innerHTML = `
       <p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>
     `;
-    return;
   }
 
   // Cabeçalho do produto com overlay
@@ -203,17 +198,14 @@ btnSearch.addEventListener("click", async () => {
   summaryContainer.innerHTML = `
     <div class="product-header">
       <div class="product-image-wrapper">
-        <img
-          src="${productImg || 'https://via.placeholder.com/150'}"
-          alt="${productName}"
-        />
+        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
         <div class="product-name-overlay">${productName}</div>
       </div>
       <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
     </div>
   `;
 
-  // Atualiza e persiste histórico
+  // Atualiza histórico
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   saveHistory();
   renderHistory();
@@ -231,10 +223,9 @@ btnSearch.addEventListener("click", async () => {
       </div>
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong>
-           ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
         <a
-          href="https://www.google.com/maps/search/?api=1&query=${e.latitude},${e.longitude}"
+          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
           target="_blank"
         >
           <i class="fas fa-map-marker-alt"></i> Como chegar
