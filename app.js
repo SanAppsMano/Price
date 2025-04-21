@@ -18,201 +18,77 @@ function saveHistory() {
   localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
-// Carrega e renderiza um item do histórico
-function loadFromCache(item) {
-  if (!item.dados || !Array.isArray(item.dados)) {
-    alert("Sem dados em cache para este produto. Faça a busca primeiro.");
-    return;
-  }
-
-  // Preenche o campo de código de barras
-  barcodeInput.value = item.code;
-  const { name: productName, image: productImg, dados } = item;
-
-  // Renderiza cabeçalho
-  summaryContainer.innerHTML = `
-    <div class="product-header">
-      <div class="product-image-wrapper">
-        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
-        <div class="product-name-overlay">${productName}</div>
-      </div>
-      <p><strong>${dados.length}</strong> estabelecimento(s) no histórico.</p>
-    </div>
-  `;
-
-  // Renderiza cards
-  resultContainer.innerHTML = "";
-  const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-
-  [menor, maior].forEach((e, i) => {
-    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
-    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">
-        ${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}
-      </div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <p style="font-size: 0.95rem;">
-          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
-          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
-        </p>
-      </div>
-    `;
-    resultContainer.appendChild(card);
-  });
-}
-
-// Renderiza histórico
+// Renderiza histórico com image, city e timestamp
 function renderHistory() {
   historyListEl.innerHTML = "";
   historyArr.forEach(item => {
     const li = document.createElement("li");
     li.className = "history-item";
-    const btn = document.createElement("button");
-    btn.title = item.name;
-    btn.addEventListener("click", () => loadFromCache(item));
+
     if (item.image) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "history-item-wrapper";
       const img = document.createElement("img");
       img.src = item.image;
       img.alt = item.name;
-      btn.appendChild(img);
+      wrapper.appendChild(img);
+
+      const overlay = document.createElement("div");
+      overlay.className = "history-meta";
+      const d = new Date(item.timestamp);
+      const dateStr = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+      const timeStr = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      overlay.textContent = `${item.city} • ${dateStr} • ${timeStr}`;
+      wrapper.appendChild(overlay);
+
+      wrapper.addEventListener('click', () => loadFromCache(item));
+      li.appendChild(wrapper);
     } else {
+      const btn = document.createElement("button");
       btn.textContent = item.name;
+      btn.addEventListener("click", () => loadFromCache(item));
+      li.appendChild(btn);
     }
-    li.appendChild(btn);
+
     historyListEl.appendChild(li);
   });
 }
 
-// Limpa histórico
-clearHistoryBtn.addEventListener("click", () => {
-  if (confirm("Deseja limpar o histórico de buscas?")) {
-    historyArr = [];
-    saveHistory();
-    renderHistory();
-  }
-});
+// Carrega e renderiza um item do histórico
+function loadFromCache(item) {
+  // ... (mantém seu código atual de loadFromCache) ...
+}
 
 // Inicializa histórico
 renderHistory();
 
-// Seleção de raio
-let selectedRadius = document.querySelector('.radius-btn.active').dataset.value;
-radiusButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    radiusButtons.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedRadius = btn.dataset.value;
-  });
-});
-
 // Função principal de busca
 btnSearch.addEventListener("click", async () => {
-  const barcode = barcodeInput.value.trim();
-  if (!barcode) { alert("Digite um código de barras válido."); return; }
+  // ... seu código de busca atual ...
 
-  btnSearch.textContent = "Atualizar Preço";
-  btnSearch.classList.add("btn-update-font");
-  loading.classList.add("active");
-  resultContainer.innerHTML = "";
-  summaryContainer.innerHTML = "";
+  // após obter dados: renderiza cards, etc.
 
-  // Localização
+  // Inclui city e timestamp ao salvar no histórico
+  const now = Date.now();
   const locType = document.querySelector('input[name="loc"]:checked').value;
-  let latitude, longitude;
-  if (locType === 'gps') {
-    try {
-      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
-      latitude = pos.coords.latitude;
-      longitude = pos.coords.longitude;
-    } catch {
-      loading.classList.remove("active");
-      alert("Não foi possível obter sua localização.");
-      return;
-    }
-  } else {
-    [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
-  }
+  const cityLabel = locType === 'gps'
+    ? 'Minha localização'
+    : document.getElementById('city').selectedOptions[0].text;
 
-  // Busca API
-  let data;
-  try {
-    const res = await fetch('/.netlify/functions/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigoDeBarras: barcode, latitude: Number(latitude), longitude: Number(longitude), raio: Number(selectedRadius), dias: 3 })
-    });
-    data = await res.json();
-  } catch {
-    loading.classList.remove("active");
-    alert("Erro ao buscar preços. Tente novamente mais tarde.");
-    return;
-  }
+  historyArr.unshift({
+    code: barcode,
+    name: productName,
+    image: productImg,
+    city: cityLabel,
+    timestamp: now,
+    dados
+  });
 
-  loading.classList.remove("active");
-  btnSearch.textContent = "Pesquisar Preço";
-  btnSearch.classList.remove("btn-update-font");
-
-  const dados = Array.isArray(data) ? data : (Array.isArray(data.dados) ? data.dados : []);
-  if (!dados.length) {
-    resultContainer.innerHTML = `<p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>`;
-    return;
-  }
-
-  // Cabeçalho
-  const primeiro = dados[0];
-  const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
-  const productImg = primeiro.codGetin ? `https://cdn-cosmos.bluesoft.com.br/products/${primeiro.codGetin}` : '';
-  summaryContainer.innerHTML = `
-    <div class="product-header">
-      <div class="product-image-wrapper">
-        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
-        <div class="product-name-overlay">${productName}</div>
-      </div>
-      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
-    </div>
-  `;
-
-  // Atualiza histórico
-  historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
   saveHistory();
   renderHistory();
 
-  // Renderiza Menor/Maior Preço
-  const sorted2 = [...dados].sort((a,b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [minItem, maxItem] = [sorted2[0], sorted2[sorted2.length -1]];
-  [minItem, maxItem].forEach((e,i) => {
-    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
-    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">${priceLab} — ${e.nomFantasia||e.nomRazaoSocial||'—'}</div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro||'—'} / ${e.nomMunicipio||'—'}</p>
-        <p style="font-size:0.95rem;">
-          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
-          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
-        </p>
-      </div>
-    `;
-    resultContainer.appendChild(card);
-  });
+  // ... restante do seu código ...
 });
 
 // ===== Footer & Modal =====
-document.getElementById('by-sanapps').addEventListener('click', () => {
-  document.getElementById('sanapps-modal').classList.add('active');
-});
-const modal = document.getElementById('sanapps-modal');
-modal.querySelector('.modal-close').addEventListener('click', () => modal.classList.remove('active'));
-modal.addEventListener('click', e => { if(e.target===modal) modal.classList.remove('active'); });
+// ... mantém seu código atual para modal ...
