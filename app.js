@@ -47,6 +47,8 @@ function loadFromCache(item) {
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
   [menor, maior].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
+    const href = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -56,10 +58,7 @@ function loadFromCache(item) {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a
-          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
-          target="_blank"
-        >
+        <a href="${href}" target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
       </div>
@@ -147,7 +146,9 @@ btnSearch.addEventListener("click", async () => {
       return;
     }
   } else {
-    [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
+    [latitude, longitude] = document.getElementById("city").value
+      .split(",")
+      .map(Number);
   }
 
   // Chamada à Netlify Function
@@ -158,8 +159,8 @@ btnSearch.addEventListener("click", async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         codigoDeBarras: barcode,
-        latitude:       Number(latitude),
-        longitude:      Number(longitude),
+        latitude:       latitude,
+        longitude:      longitude,
         raio:           Number(selectedRadius),
         dias:           3
       })
@@ -212,9 +213,11 @@ btnSearch.addEventListener("click", async () => {
 
   // Renderiza cards de menor e maior preço
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
-  [menor, maior].forEach((e, i) => {
+  const [menorItem, maiorItem] = [sorted[0], sorted[sorted.length - 1]];
+  [menorItem, maiorItem].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
+    const href     = `https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}`;
+
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
@@ -224,10 +227,7 @@ btnSearch.addEventListener("click", async () => {
       <div class="card-body">
         <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
         <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <a
-          href="https://www.google.com/maps/dir/?api=1&destination=${e.latitude},${e.longitude}"
-          target="_blank"
-        >
+        <a href="${href}" target="_blank">
           <i class="fas fa-map-marker-alt"></i> Como chegar
         </a>
       </div>
