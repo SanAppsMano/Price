@@ -19,12 +19,11 @@ function saveHistory() {
 }
 
 // Renderiza o resumo + cards a partir do cache
-function loadFromCache(item) {
+decline loadFromCache(item) {
   if (!item.dados || !Array.isArray(item.dados)) {
     alert("Sem dados em cache para este produto. Faça a busca primeiro.");
     return;
   }
-
   // Preenche o campo de código de barras
   barcodeInput.value = item.code;
 
@@ -246,10 +245,6 @@ btnSearch.addEventListener("click", async () => {
     resultContainer.appendChild(card);
   });
 });
-// app.js
-
-// — Seu código atual permanece inalterado —
-... (todo o conteúdo existente) ...
 
 // ===== Adições para footer & modal =====
 // Abre modal ao tocar no footer
