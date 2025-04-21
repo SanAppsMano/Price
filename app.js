@@ -226,44 +226,4 @@ btnSearch.addEventListener("click", async () => {
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
   if (!dados.length) {
-    resultContainer.innerHTML = `<p>Nenhum estabelecimento encontrado em até <strong>${selectedRadius} km</strong>.</p>`;
-    return;
-  }
-
-  currentResults = dados;
-
-  // Cabeçalho do produto com overlay
-  const primeiro    = dados[0];
-  const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
-  const productImg  = primeiro.codGetin
-    ? `https://cdn-cosmos.bluesoft.com.br/products/${primeiro.codGetin}`
-    : '';
-
-  summaryContainer.innerHTML = `
-    <div class="product-header">
-      <div class="product-image-wrapper">
-        <img src="${productImg || 'https://via.placeholder.com/150'}" alt="${productName}" />
-        <div class="product-name-overlay">${productName}</div>
-      </div>
-      <p><strong>${dados.length}</strong> estabelecimento(s) encontrado(s).</p>
-    </div>
-  `;
-
-  // Atualiza histórico (inclui timestamp)
-  historyArr.unshift({
-    code:             barcode,
-    name:             productName,
-    image:            productImg,
-    dados,
-    searchTimestamp:  searchTimestamp.toISOString()
-  });
-  saveHistory();
-  renderHistory();
-
-  // Renderiza cards de menor e maior preço
-  const sorted2 = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  const [minItem, maxItem] = [sorted2[0], sorted2[sorted2.length - 1]];
-  [minItem, maxItem].forEach((e, i) => {
-    const priceLab = i === 0 ? "Menor preço" : "Maior preço";
-    const mapL     = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
-    const dirL     = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${
+    resultContainer.innerHTML = `<p>Nenhum estabelecimento encontrado em até <strong>${selected
