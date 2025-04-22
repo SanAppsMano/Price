@@ -56,7 +56,7 @@ body {
 .controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  gap: 1rem; /* base gap */
   align-items: end;
 }
 .location-choice label {
@@ -71,11 +71,11 @@ body {
 }
 .radius-control {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem; /* increased gap for breathing */
 }
 .radius-btn {
   flex: 1;
-  padding: 0.6rem 0;
+  padding: 0.6rem 1rem; /* added horizontal padding */
   border: 1px solid var(--color-primary);
   background: var(--color-white);
   color: var(--color-primary);
@@ -325,7 +325,7 @@ body {
     display: grid;
     grid-template-columns: auto auto auto 1fr auto;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem; /* increased desktop gap */
   }
   .location-choice {
     grid-column: 1;
@@ -335,6 +335,8 @@ body {
   }
   .radius-control {
     grid-column: 3;
+    display: flex;
+    gap: 1rem;
   }
   .barcode-wrap {
     grid-column: 4;
