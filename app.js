@@ -1,4 +1,4 @@
-/* Updated app.js to use icon-only button for search and remove text labels */
+/* Updated app.js to include "Quando" field showing e.dthEmissaoUltimaVenda */
 
 // — Referências ao DOM —
 const btnSearch        = document.getElementById("btn-search");
@@ -12,21 +12,10 @@ const radiusButtons    = document.querySelectorAll('.radius-btn');
 const historyListEl    = document.getElementById("history-list");
 const clearHistoryBtn  = document.getElementById("clear-history");
 let historyArr         = JSON.parse(localStorage.getItem("searchHistory") || "[]");
-const MAX_HISTORY      = 20; // limite de entradas no histórico
-
-// HTML do ícone de pesquisa
-const searchIconHTML = '<i class="fas fa-search"></i>';
-
-// Inicializa botão sempre com ícone
-btnSearch.innerHTML = searchIconHTML;
 
 // Persiste histórico em localStorage
 function saveHistory() {
-  try {
-    localStorage.setItem("searchHistory", JSON.stringify(historyArr));
-  } catch (e) {
-    console.warn('Não foi possível salvar histórico:', e);
-  }
+  localStorage.setItem("searchHistory", JSON.stringify(historyArr));
 }
 
 // — Modal de lista ordenada —
@@ -43,10 +32,15 @@ function loadFromCache(item) {
     return;
   }
 
+  // Atualiza currentResults
   currentResults = item.dados;
+
+  // Preenche o campo de código de barras
   barcodeInput.value = item.code;
 
   const { name: productName, image: productImg, dados } = item;
+
+  // Cabeçalho com overlay de nome
   summaryContainer.innerHTML = `
     <div class="product-header">
       <div class="product-image-wrapper">
@@ -57,6 +51,7 @@ function loadFromCache(item) {
     </div>
   `;
 
+  // Renderiza cards
   resultContainer.innerHTML = "";
   const sorted = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [menor, maior] = [sorted[0], sorted[sorted.length - 1]];
@@ -90,6 +85,7 @@ function renderHistory() {
   historyArr.forEach(item => {
     const li = document.createElement("li");
     li.className = "history-item";
+
     const btn = document.createElement("button");
     btn.title = item.name;
     btn.addEventListener("click", () => loadFromCache(item));
@@ -117,6 +113,7 @@ clearHistoryBtn.addEventListener("click", () => {
   }
 });
 
+// Renderiza histórico ao iniciar
 renderHistory();
 
 // — Seleção de raio de busca —
@@ -137,12 +134,15 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  // exibe ícone e remove possíveis labels
-  btnSearch.innerHTML = searchIconHTML;
+  // Ajusta texto do botão
+  btnSearch.textContent = "Atualizar Preço";
+  btnSearch.classList.add("btn-update-font");
+
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
 
+  // Localização
   const locType = document.querySelector('input[name="loc"]:checked').value;
   let latitude, longitude;
   if (locType === 'gps') {
@@ -161,6 +161,7 @@ btnSearch.addEventListener("click", async () => {
     [latitude, longitude] = document.getElementById("city").value.split(",").map(Number);
   }
 
+  // Chamada à Netlify Function
   let data;
   try {
     const res = await fetch('/.netlify/functions/search', {
@@ -182,9 +183,12 @@ btnSearch.addEventListener("click", async () => {
   }
 
   loading.classList.remove("active");
-  // mantém apenas ícone no botão após busca
-  btnSearch.innerHTML = searchIconHTML;
 
+  // Restaura texto do botão
+  btnSearch.textContent = "Pesquisar";
+  btnSearch.classList.remove("btn-update-font");
+
+  // Normaliza resultados
   const dados = Array.isArray(data)
     ? data
     : (Array.isArray(data.dados) ? data.dados : []);
@@ -193,7 +197,10 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
+  // Atualiza currentResults
   currentResults = dados;
+
+  // Cabeçalho do produto com overlay
   const primeiro    = dados[0];
   const productName = data.dscProduto || primeiro.dscProduto || 'Produto não identificado';
   const productImg  = primeiro.codGetin
@@ -210,18 +217,72 @@ btnSearch.addEventListener("click", async () => {
     </div>
   `;
 
-  // Atualiza histórico com limite de entradas
+  // Atualiza histórico
   historyArr.unshift({ code: barcode, name: productName, image: productImg, dados });
-  if (historyArr.length > MAX_HISTORY) {
-    historyArr = historyArr.slice(0, MAX_HISTORY);
-  }
   saveHistory();
   renderHistory();
 
+  // Renderiza cards de menor e maior preço
   const sorted2 = [...dados].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
   const [minItem, maxItem] = [sorted2[0], sorted2[sorted2.length - 1]];
   [minItem, maxItem].forEach((e, i) => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : "—";
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-header">${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
+      <div class="card-body">
+        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio ||
+ '—'}</p>
+        <p><strong>Quando:</strong> ${when}</p>
+        <p style="font-size: 0.95rem;">
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
+        </p>
+      </div>
+    `;
+    resultContainer.appendChild(card);
+  });
+});
+
+// — Funcionalidade do Modal —
+openModalBtn.addEventListener('click', () => {
+  if (!currentResults.length) {
+    alert('Não há resultados para exibir. Faça uma busca primeiro.');
+    return;
+  }
+  modalList.innerHTML = '';
+  const sortedAll = [...currentResults].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
+  sortedAll.forEach(e => {
+    const li = document.createElement('li');
+    const card = document.createElement('div');
+    card.className = 'card';
+    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
+    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : '—';
+    card.innerHTML = `
+      <div class="card-header">${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
+      <div class="card-body">
+        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
+        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
+        <p><strong>Quando:</strong> ${when}</p>
+        <p style="font-size: 0.95rem;">
+          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
+          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
+        </p>
+      </div>
+    `;
+    li.appendChild(card);
+    modalList.appendChild(li);
+  });
+  modal.classList.add('active');
+});
+closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
+modal.addEventListener('click', e => {
+  if (e.target === modal) modal.classList.remove('active');
+});
