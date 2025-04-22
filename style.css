@@ -69,11 +69,6 @@ body {
   border: 1px solid #ccc;
   border-radius: var(--radius);
 }
-/* Fallback: esmaece o select quando desabilitado */
-.select-field:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 .radius-control {
   display: flex;
   gap: 0.5rem;
@@ -106,7 +101,6 @@ body {
 .btn-primary {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
   background: var(--color-accent);
   color: var(--color-white);
@@ -291,6 +285,8 @@ body {
 }
 #modal-list li { list-style: none; }
 
+/* ===== Footer ===== */
+
 /* ===== Responsividade ===== */
 /* Mobile (até 767px) */
 @media (max-width: 767px) {
@@ -309,9 +305,6 @@ body {
   .barcode-wrap #barcode,
   .barcode-wrap .btn-primary {
     width: 100%;
-  }
-  .barcode-wrap .btn-primary {
-    justify-content: center;
   }
   .open-modal-btn {
     width: 100%;
