@@ -69,6 +69,11 @@ body {
   border: 1px solid #ccc;
   border-radius: var(--radius);
 }
+/* Fallback: esmaece o select quando desabilitado */
+.select-field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .radius-control {
   display: flex;
   gap: 0.5rem;
