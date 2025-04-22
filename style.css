@@ -292,8 +292,32 @@ body {
 @media (max-width: 767px) {
   .search-panel {
     padding: 1rem;
-    margin: 0 auto 1rem auto; /* removed negative overlap */
+    margin: -1rem auto 1rem auto;
   }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .barcode-wrap {
+    flex-direction: column;
+  }
+  .barcode-wrap #barcode,
+  .barcode-wrap .btn-primary {
+    width: 100%;
+  }
+  .barcode-wrap .btn-primary {
+    justify-content: center;
+  }
+  .open-modal-btn {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+  }
+  .controls > * {
+    width: 100%;
+  }
+}
   .controls {
     display: flex;
     flex-direction: column;
