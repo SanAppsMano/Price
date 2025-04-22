@@ -286,3 +286,66 @@ body {
 #modal-list li { list-style: none; }
 
 /* ===== Footer ===== */
+
+/* ===== Responsividade ===== */
+/* Mobile (até 767px) */
+@media (max-width: 767px) {
+  .search-panel {
+    padding: 1rem;
+    margin: -1rem auto 1rem auto;
+  }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .barcode-wrap {
+    flex-direction: column;
+  }
+  .barcode-wrap #barcode,
+  .barcode-wrap .btn-primary {
+    width: 100%;
+  }
+  .open-modal-btn {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+  }
+  .controls > * {
+    width: 100%;
+  }
+}
+
+/* Desktop (a partir de 768px) */
+@media (min-width: 768px) {
+  .search-panel {
+    padding: 2rem;
+    margin: -2rem auto 1rem auto;
+  }
+  .controls {
+    display: grid;
+    grid-template-columns: auto auto auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+  }
+  .location-choice {
+    grid-column: 1;
+  }
+  #city-block {
+    grid-column: 2;
+  }
+  .radius-control {
+    grid-column: 3;
+  }
+  .barcode-wrap {
+    grid-column: 4;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .open-modal-btn {
+    grid-column: 5;
+    margin: 0;
+    width: auto;
+    justify-self: start;
+  }
+}
