@@ -1,4 +1,4 @@
-/* Updated app.js to include "Quando" field and discard old history entries beyond limit */
+/* Updated app.js to use icon-only button for search and remove text labels */
 
 // — Referências ao DOM —
 const btnSearch        = document.getElementById("btn-search");
@@ -13,6 +13,12 @@ const historyListEl    = document.getElementById("history-list");
 const clearHistoryBtn  = document.getElementById("clear-history");
 let historyArr         = JSON.parse(localStorage.getItem("searchHistory") || "[]");
 const MAX_HISTORY      = 20; // limite de entradas no histórico
+
+// HTML do ícone de pesquisa
+const searchIconHTML = '<i class="fas fa-search"></i>';
+
+// Inicializa botão sempre com ícone
+btnSearch.innerHTML = searchIconHTML;
 
 // Persiste histórico em localStorage
 function saveHistory() {
@@ -131,8 +137,8 @@ btnSearch.addEventListener("click", async () => {
     return;
   }
 
-  btnSearch.textContent = "Atualizar Preço";
-  btnSearch.classList.add("btn-update-font");
+  // exibe ícone e remove possíveis labels
+  btnSearch.innerHTML = searchIconHTML;
   loading.classList.add("active");
   resultContainer.innerHTML  = "";
   summaryContainer.innerHTML = "";
@@ -176,8 +182,8 @@ btnSearch.addEventListener("click", async () => {
   }
 
   loading.classList.remove("active");
-  btnSearch.textContent = "Pesquisar";
-  btnSearch.classList.remove("btn-update-font");
+  // mantém apenas ícone no botão após busca
+  btnSearch.innerHTML = searchIconHTML;
 
   const dados = Array.isArray(data)
     ? data
@@ -218,59 +224,4 @@ btnSearch.addEventListener("click", async () => {
     const priceLab = i === 0 ? "Menor preço" : "Maior preço";
     const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
     const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : "—";
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-header">${priceLab} — ${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <p><strong>Quando:</strong> ${when}</p>
-        <p style="font-size: 0.95rem;">
-          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
-          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
-        </p>
-      </div>
-    `;
-    resultContainer.appendChild(card);
-  });
-});
-
-// — Funcionalidade do Modal —
-openModalBtn.addEventListener('click', () => {
-  if (!currentResults.length) {
-    alert('Não há resultados para exibir. Faça uma busca primeiro.');
-    return;
-  }
-  modalList.innerHTML = '';
-  const sortedAll = [...currentResults].sort((a, b) => a.valMinimoVendido - b.valMinimoVendido);
-  sortedAll.forEach(e => {
-    const li = document.createElement('li');
-    const card = document.createElement('div');
-    card.className = 'card';
-    const mapL = `https://www.google.com/maps/search/?api=1&query=${e.numLatitude},${e.numLongitude}`;
-    const dirL = `https://www.google.com/maps/dir/?api=1&destination=${e.numLatitude},${e.numLongitude}`;
-    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).toLocaleString() : '—';
-    card.innerHTML = `
-      <div class="card-header">${e.nomFantasia || e.nomRazaoSocial || '—'}</div>
-      <div class="card-body">
-        <p><strong>Preço:</strong> R$ ${e.valMinimoVendido.toFixed(2)}</p>
-        <p><strong>Bairro/Município:</strong> ${e.nomBairro || '—'} / ${e.nomMunicipio || '—'}</p>
-        <p><strong>Quando:</strong> ${when}</p>
-        <p style="font-size: 0.95rem;">
-          <a href="${mapL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Ver no mapa</a> |
-          <a href="${dirL}" target="_blank"><i class="fas fa-map-marker-alt"></i> Como chegar</a>
-        </p>
-      </div>
-    `;
-    li.appendChild(card);
-    modalList.appendChild(li);
-  });
-  modal.classList.add('active');
-});
-closeModalBtn.addEventListener('click', () => modal.classList.remove('active'));
-modal.addEventListener('click', e => {
-  if (e.target === modal) modal.classList.remove('active');
-});
+    const when = e.dthEmissaoUltimaVenda ? new Date(e.dthEmissaoUltimaVenda).
