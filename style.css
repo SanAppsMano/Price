@@ -1,3 +1,5 @@
+/* style.css */
+
 /* ========== Variáveis ========== */
 :root {
   --color-primary: #005aaf;
@@ -68,7 +70,6 @@ body {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: var(--radius);
-  opacity: 1;
 }
 .radius-control {
   display: flex;
@@ -146,7 +147,10 @@ body {
   font-weight: bold;
 }
 .card-body {
+  position: relative;
   padding: 1rem;
+  /* espaçamento dinâmico para o ícone */
+  padding-right: clamp(4rem, 12%, 8rem);
   flex: 1;
 }
 .card-body p {
@@ -158,6 +162,20 @@ body {
   font-weight: bold;
 }
 .card-body a:hover { text-decoration: underline; }
+
+/* Ícone à direita responsivo */
+.card-icon-right {
+  position: absolute;
+  top: 50%;
+  right: clamp(1rem, 4%, 2rem);
+  width: clamp(48px, 10%, 96px);
+  transform: translateY(-50%);
+}
+.card-icon-right img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 
 /* ========== Product Header Overlay ======= */
 .product-header {
@@ -292,7 +310,7 @@ body {
 @media (max-width: 767px) {
   .search-panel {
     padding: 1rem;
-    margin: 0 auto 1rem auto; /* removed negative overlap */
+    margin: 0 auto 1rem auto;
   }
   .controls {
     display: flex;
