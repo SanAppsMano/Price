@@ -151,11 +151,12 @@ window.addEventListener('DOMContentLoaded', () => {
         const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
         latitude  = pos.coords.latitude;
         longitude = pos.coords.longitude;
-      } catch {
-        loading.classList.remove('active');
-        alert('Não foi possível obter localização.');
-        return;
-      }
+          } catch {
+      loading.classList.remove('active');
+      // Mensagem para demora na resposta
+      summaryContainer.innerHTML = `<p>O servidor demorou a responder. Tente novamente mais tarde.</p>`;
+      return;
+    }
     } else {
       [latitude, longitude] = document.getElementById('city').value.split(',').map(Number);
     }
@@ -170,7 +171,7 @@ window.addEventListener('DOMContentLoaded', () => {
       loading.classList.remove('active');
       const dados = Array.isArray(data) ? data : data.dados || [];
       if (!dados.length) {
-        summaryContainer.innerHTML = `<p>Nenhum estabelecimento encontrado.</p>`;
+        summaryContainer.innerHTML = `<p>Nenhum estabelecimento encontrado. Tente novamente mais tarde.</p>`;
         return;
       }
       historyArr.unshift({ code: barcode, name: data.dscProduto || '', image: '', dados });
