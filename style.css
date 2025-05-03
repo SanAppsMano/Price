@@ -368,4 +368,38 @@ body {
     width: auto;
     justify-self: start;
   }
+  /* Botão de scan */
+.btn-scan {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  padding: 0.6rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+.btn-scan:hover { opacity: 0.9; }
+.btn-scan i    { font-size: 1.2rem; }
+
+/* Histórico em linha */
+.history-list {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+.history-list li {
+  flex: 0 0 auto;
+}
+/* Destacar o input de código de barras */
+#barcode {
+  font-size: 1.25rem;           /* já definido para ~20px */
+  line-height: 1.4;
+  font-weight: 600;             /* negrito suave */
+  color: var(--color-primary);  /* sua cor primária, ex.: #005aaf */
+}
+
 }
